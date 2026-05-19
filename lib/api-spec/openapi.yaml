@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Benefits Enrollment Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: employees
+    description: Employee management
+  - name: benefits
+    description: Benefits plan management
+  - name: enrollments
+    description: Enrollment management
+  - name: carriers
+    description: Insurance carrier management
+  - name: documents
+    description: Document and form management
+  - name: integrations
+    description: Payroll and external integrations
+  - name: dashboard
+    description: Dashboard summary data
+  - name: invitations
+    description: Employee invitation management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,731 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Dashboard
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Summary data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/enrollment-activity:
+    get:
+      operationId: getEnrollmentActivity
+      tags: [dashboard]
+      summary: Get recent enrollment activity
+      responses:
+        "200":
+          description: List of recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/enrollment-by-plan:
+    get:
+      operationId: getEnrollmentByPlan
+      tags: [dashboard]
+      summary: Get enrollment counts grouped by plan
+      responses:
+        "200":
+          description: Enrollment breakdown by plan
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlanEnrollmentCount"
+
+  # Employees
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List all employees
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create a new employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Created employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/import-csv:
+    post:
+      operationId: importEmployeesCsv
+      tags: [employees]
+      summary: Import employees from CSV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CsvImportInput"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  /employees/{id}:
+    get:
+      operationId: getEmployee
+      tags: [employees]
+      summary: Get employee by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateEmployee
+      tags: [employees]
+      summary: Update employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeUpdate"
+      responses:
+        "200":
+          description: Updated employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+    delete:
+      operationId: deleteEmployee
+      tags: [employees]
+      summary: Delete employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Invitations
+  /employees/{id}/invite:
+    post:
+      operationId: sendEmployeeInvitation
+      tags: [invitations]
+      summary: Send enrollment invitation email to employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationResult"
+
+  /invitations/bulk:
+    post:
+      operationId: sendBulkInvitations
+      tags: [invitations]
+      summary: Send bulk invitations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkInvitationInput"
+      responses:
+        "200":
+          description: Bulk invitation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkInvitationResult"
+
+  # Benefits Plans
+  /benefits:
+    get:
+      operationId: listBenefitPlans
+      tags: [benefits]
+      summary: List all benefit plans
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: carrierId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of benefit plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitPlan"
+    post:
+      operationId: createBenefitPlan
+      tags: [benefits]
+      summary: Create a benefit plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BenefitPlanInput"
+      responses:
+        "201":
+          description: Created plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitPlan"
+
+  /benefits/{id}:
+    get:
+      operationId: getBenefitPlan
+      tags: [benefits]
+      summary: Get benefit plan by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Benefit plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitPlan"
+    patch:
+      operationId: updateBenefitPlan
+      tags: [benefits]
+      summary: Update benefit plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BenefitPlanUpdate"
+      responses:
+        "200":
+          description: Updated plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitPlan"
+    delete:
+      operationId: deleteBenefitPlan
+      tags: [benefits]
+      summary: Delete benefit plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Enrollments
+  /enrollments:
+    get:
+      operationId: listEnrollments
+      tags: [enrollments]
+      summary: List all enrollments
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+        - name: planId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of enrollments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Enrollment"
+    post:
+      operationId: createEnrollment
+      tags: [enrollments]
+      summary: Create enrollment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollmentInput"
+      responses:
+        "201":
+          description: Created enrollment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  /enrollments/{id}:
+    get:
+      operationId: getEnrollment
+      tags: [enrollments]
+      summary: Get enrollment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Enrollment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+    patch:
+      operationId: updateEnrollment
+      tags: [enrollments]
+      summary: Update enrollment status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollmentUpdate"
+      responses:
+        "200":
+          description: Updated enrollment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  /enrollments/{id}/transmit:
+    post:
+      operationId: transmitEnrollment
+      tags: [enrollments]
+      summary: Transmit enrollment to carrier via EDI/SFTP/Email
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransmitInput"
+      responses:
+        "200":
+          description: Transmission result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransmitResult"
+
+  # Carriers
+  /carriers:
+    get:
+      operationId: listCarriers
+      tags: [carriers]
+      summary: List all carriers
+      responses:
+        "200":
+          description: List of carriers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Carrier"
+    post:
+      operationId: createCarrier
+      tags: [carriers]
+      summary: Create a carrier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CarrierInput"
+      responses:
+        "201":
+          description: Created carrier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Carrier"
+
+  /carriers/{id}:
+    get:
+      operationId: getCarrier
+      tags: [carriers]
+      summary: Get carrier by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Carrier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Carrier"
+    patch:
+      operationId: updateCarrier
+      tags: [carriers]
+      summary: Update carrier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CarrierUpdate"
+      responses:
+        "200":
+          description: Updated carrier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Carrier"
+    delete:
+      operationId: deleteCarrier
+      tags: [carriers]
+      summary: Delete carrier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /carriers/{id}/test-connection:
+    post:
+      operationId: testCarrierConnection
+      tags: [carriers]
+      summary: Test carrier EDI/SFTP connection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionTestResult"
+
+  # Documents
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [documents]
+      summary: List all documents
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: carrierId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+    post:
+      operationId: createDocument
+      tags: [documents]
+      summary: Create/upload a document record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Created document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /documents/{id}:
+    get:
+      operationId: getDocument
+      tags: [documents]
+      summary: Get document by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      summary: Delete document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /documents/{id}/transmit-email:
+    post:
+      operationId: transmitDocumentEmail
+      tags: [documents]
+      summary: Email document to carrier enrollment department
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailTransmitInput"
+      responses:
+        "200":
+          description: Email transmit result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransmitResult"
+
+  # Integrations (Payroll systems)
+  /integrations:
+    get:
+      operationId: listIntegrations
+      tags: [integrations]
+      summary: List configured payroll integrations
+      responses:
+        "200":
+          description: List of integrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Integration"
+    post:
+      operationId: createIntegration
+      tags: [integrations]
+      summary: Configure a payroll integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntegrationInput"
+      responses:
+        "201":
+          description: Created integration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+
+  /integrations/{id}:
+    get:
+      operationId: getIntegration
+      tags: [integrations]
+      summary: Get integration by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Integration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+    patch:
+      operationId: updateIntegration
+      tags: [integrations]
+      summary: Update integration settings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntegrationUpdate"
+      responses:
+        "200":
+          description: Updated integration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Integration"
+    delete:
+      operationId: deleteIntegration
+      tags: [integrations]
+      summary: Delete integration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /integrations/{id}/sync:
+    post:
+      operationId: syncIntegration
+      tags: [integrations]
+      summary: Sync employees from payroll integration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +774,748 @@ components:
       required:
         - status
 
+    DashboardSummary:
+      type: object
+      properties:
+        totalEmployees:
+          type: integer
+        enrolledEmployees:
+          type: integer
+        pendingEnrollments:
+          type: integer
+        activeCarriers:
+          type: integer
+        activePlans:
+          type: integer
+        transmissionsPending:
+          type: integer
+        enrollmentCompletionRate:
+          type: number
+      required:
+        - totalEmployees
+        - enrolledEmployees
+        - pendingEnrollments
+        - activeCarriers
+        - activePlans
+        - transmissionsPending
+        - enrollmentCompletionRate
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        employeeName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - description
+        - createdAt
+
+    PlanEnrollmentCount:
+      type: object
+      properties:
+        planId:
+          type: integer
+        planName:
+          type: string
+        planType:
+          type: string
+        enrolledCount:
+          type: integer
+        carrierName:
+          type: string
+      required:
+        - planId
+        - planName
+        - planType
+        - enrolledCount
+        - carrierName
+
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+        hireDate:
+          type: ["string", "null"]
+        department:
+          type: ["string", "null"]
+        jobTitle:
+          type: ["string", "null"]
+        employeeId:
+          type: ["string", "null"]
+        status:
+          type: string
+        invitationStatus:
+          type: string
+        invitationSentAt:
+          type: ["string", "null"]
+        ssn:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        zip:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - status
+        - invitationStatus
+        - createdAt
+
+    EmployeeInput:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+        hireDate:
+          type: string
+        department:
+          type: string
+        jobTitle:
+          type: string
+        employeeId:
+          type: string
+        ssn:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+      required:
+        - firstName
+        - lastName
+        - email
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+        hireDate:
+          type: string
+        department:
+          type: string
+        jobTitle:
+          type: string
+        employeeId:
+          type: string
+        status:
+          type: string
+        ssn:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+
+    CsvImportInput:
+      type: object
+      properties:
+        csvData:
+          type: string
+        mappings:
+          type: object
+      required:
+        - csvData
+
+    ImportResult:
+      type: object
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+      required:
+        - imported
+        - skipped
+        - errors
+        - message
+
+    InvitationResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        sentTo:
+          type: string
+      required:
+        - success
+        - message
+        - sentTo
+
+    BulkInvitationInput:
+      type: object
+      properties:
+        employeeIds:
+          type: array
+          items:
+            type: integer
+        message:
+          type: string
+      required:
+        - employeeIds
+
+    BulkInvitationResult:
+      type: object
+      properties:
+        sent:
+          type: integer
+        failed:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - sent
+        - failed
+        - errors
+
+    BenefitPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        carrierId:
+          type: integer
+        carrierName:
+          type: ["string", "null"]
+        groupNumber:
+          type: ["string", "null"]
+        planYear:
+          type: ["string", "null"]
+        effectiveDate:
+          type: ["string", "null"]
+        renewalDate:
+          type: ["string", "null"]
+        employeeCost:
+          type: ["number", "null"]
+        employerCost:
+          type: ["number", "null"]
+        deductible:
+          type: ["number", "null"]
+        outOfPocketMax:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        enrolledCount:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - carrierId
+        - isActive
+        - enrolledCount
+        - createdAt
+
+    BenefitPlanInput:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        carrierId:
+          type: integer
+        groupNumber:
+          type: string
+        planYear:
+          type: string
+        effectiveDate:
+          type: string
+        renewalDate:
+          type: string
+        employeeCost:
+          type: number
+        employerCost:
+          type: number
+        deductible:
+          type: number
+        outOfPocketMax:
+          type: number
+        description:
+          type: string
+      required:
+        - name
+        - type
+        - carrierId
+
+    BenefitPlanUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        carrierId:
+          type: integer
+        groupNumber:
+          type: string
+        planYear:
+          type: string
+        effectiveDate:
+          type: string
+        renewalDate:
+          type: string
+        employeeCost:
+          type: number
+        employerCost:
+          type: number
+        deductible:
+          type: number
+        outOfPocketMax:
+          type: number
+        description:
+          type: string
+        isActive:
+          type: boolean
+
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: ["string", "null"]
+        employeeEmail:
+          type: ["string", "null"]
+        planId:
+          type: integer
+        planName:
+          type: ["string", "null"]
+        planType:
+          type: ["string", "null"]
+        carrierId:
+          type: ["integer", "null"]
+        carrierName:
+          type: ["string", "null"]
+        status:
+          type: string
+        coverageLevel:
+          type: ["string", "null"]
+        effectiveDate:
+          type: ["string", "null"]
+        terminationDate:
+          type: ["string", "null"]
+        transmissionStatus:
+          type: string
+        transmittedAt:
+          type: ["string", "null"]
+        transmissionMethod:
+          type: ["string", "null"]
+        dependents:
+          type: integer
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - employeeId
+        - planId
+        - status
+        - transmissionStatus
+        - dependents
+        - createdAt
+
+    EnrollmentInput:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+        planId:
+          type: integer
+        coverageLevel:
+          type: string
+        effectiveDate:
+          type: string
+        dependents:
+          type: integer
+        notes:
+          type: string
+      required:
+        - employeeId
+        - planId
+
+    EnrollmentUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        coverageLevel:
+          type: string
+        effectiveDate:
+          type: string
+        terminationDate:
+          type: string
+        notes:
+          type: string
+
+    TransmitInput:
+      type: object
+      properties:
+        method:
+          type: string
+        notes:
+          type: string
+      required:
+        - method
+
+    TransmitResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        referenceId:
+          type: ["string", "null"]
+      required:
+        - success
+        - message
+
+    Carrier:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        contactEmail:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        enrollmentEmail:
+          type: ["string", "null"]
+        ediEnabled:
+          type: boolean
+        ediSenderId:
+          type: ["string", "null"]
+        ediReceiverId:
+          type: ["string", "null"]
+        sftpEnabled:
+          type: boolean
+        sftpHost:
+          type: ["string", "null"]
+        sftpPort:
+          type: ["integer", "null"]
+        sftpUsername:
+          type: ["string", "null"]
+        sftpPath:
+          type: ["string", "null"]
+        apiEnabled:
+          type: boolean
+        apiEndpoint:
+          type: ["string", "null"]
+        connectionStatus:
+          type: string
+        lastTestedAt:
+          type: ["string", "null"]
+        activePlans:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - ediEnabled
+        - sftpEnabled
+        - apiEnabled
+        - connectionStatus
+        - activePlans
+        - createdAt
+
+    CarrierInput:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        enrollmentEmail:
+          type: string
+        ediEnabled:
+          type: boolean
+        ediSenderId:
+          type: string
+        ediReceiverId:
+          type: string
+        sftpEnabled:
+          type: boolean
+        sftpHost:
+          type: string
+        sftpPort:
+          type: integer
+        sftpUsername:
+          type: string
+        sftpPassword:
+          type: string
+        sftpPath:
+          type: string
+        apiEnabled:
+          type: boolean
+        apiEndpoint:
+          type: string
+        apiKey:
+          type: string
+      required:
+        - name
+        - type
+
+    CarrierUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        enrollmentEmail:
+          type: string
+        ediEnabled:
+          type: boolean
+        ediSenderId:
+          type: string
+        ediReceiverId:
+          type: string
+        sftpEnabled:
+          type: boolean
+        sftpHost:
+          type: string
+        sftpPort:
+          type: integer
+        sftpUsername:
+          type: string
+        sftpPassword:
+          type: string
+        sftpPath:
+          type: string
+        apiEnabled:
+          type: boolean
+        apiEndpoint:
+          type: string
+        apiKey:
+          type: string
+
+    ConnectionTestResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        latencyMs:
+          type: ["integer", "null"]
+      required:
+        - success
+        - message
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        carrierId:
+          type: ["integer", "null"]
+        carrierName:
+          type: ["string", "null"]
+        fileName:
+          type: string
+        fileSize:
+          type: ["integer", "null"]
+        isPdfFillable:
+          type: boolean
+        transmissionStatus:
+          type: string
+        lastTransmittedAt:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - fileName
+        - isPdfFillable
+        - transmissionStatus
+        - createdAt
+
+    DocumentInput:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        carrierId:
+          type: integer
+        fileName:
+          type: string
+        fileSize:
+          type: integer
+        isPdfFillable:
+          type: boolean
+        notes:
+          type: string
+      required:
+        - name
+        - type
+        - fileName
+
+    EmailTransmitInput:
+      type: object
+      properties:
+        recipientEmail:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+      required:
+        - recipientEmail
+
+    Integration:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        provider:
+          type: string
+        status:
+          type: string
+        lastSyncAt:
+          type: ["string", "null"]
+        syncedEmployees:
+          type: integer
+        apiEndpoint:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - provider
+        - status
+        - syncedEmployees
+        - createdAt
+
+    IntegrationInput:
+      type: object
+      properties:
+        name:
+          type: string
+        provider:
+          type: string
+        apiKey:
+          type: string
+        apiEndpoint:
+          type: string
+        notes:
+          type: string
+      required:
+        - name
+        - provider
+
+    IntegrationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        apiKey:
+          type: string
+        apiEndpoint:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
