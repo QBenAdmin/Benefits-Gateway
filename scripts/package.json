@@ -6,12 +6,14 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "reset-census": "tsx ./src/reset-census.ts",
+    "seed-betacorp": "tsx ./src/seed-betacorp.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@workspace/db": "workspace:*",
     "drizzle-orm": "catalog:",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "catalog:",

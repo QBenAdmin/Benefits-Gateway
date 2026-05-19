@@ -14,25 +14,23 @@ import {
 
 const router = Router();
 
+async function getEmployeeCount(employerId: number): Promise<number> {
+  const [row] = await db
+    .select({ cnt: count() })
+    .from(employeesTable)
+    .where(eq(employeesTable.employerId, employerId));
+  return Number(row?.cnt ?? 0);
+}
+
 router.get("/employers", async (req, res) => {
   const employers = await db.select().from(employersTable).orderBy(employersTable.name);
-  const empCounts = await db
-    .select({ employerId: employeesTable.id, cnt: count() })
-    .from(employeesTable)
-    .groupBy(employeesTable.id);
 
   const result = await Promise.all(
-    employers.map(async (emp) => {
-      const [row] = await db
-        .select({ cnt: count() })
-        .from(employeesTable)
-        .where(eq(employeesTable.id, emp.id));
-      return {
-        ...emp,
-        employeeCount: 0,
-        createdAt: emp.createdAt.toISOString(),
-      };
-    })
+    employers.map(async (emp) => ({
+      ...emp,
+      employeeCount: await getEmployeeCount(emp.id),
+      createdAt: emp.createdAt.toISOString(),
+    }))
   );
   res.json(result);
 });
@@ -56,7 +54,7 @@ router.get("/employers/:id", async (req, res) => {
   if (!parsed.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const [employer] = await db.select().from(employersTable).where(eq(employersTable.id, parsed.data.id));
   if (!employer) { res.status(404).json({ error: "Not found" }); return; }
-  res.json({ ...employer, employeeCount: 0, createdAt: employer.createdAt.toISOString() });
+  res.json({ ...employer, employeeCount: await getEmployeeCount(employer.id), createdAt: employer.createdAt.toISOString() });
 });
 
 router.patch("/employers/:id", async (req, res) => {
@@ -69,7 +67,7 @@ router.patch("/employers/:id", async (req, res) => {
     .where(eq(employersTable.id, parsedParams.data.id))
     .returning();
   if (!employer) { res.status(404).json({ error: "Not found" }); return; }
-  res.json({ ...employer, employeeCount: 0, createdAt: employer.createdAt.toISOString() });
+  res.json({ ...employer, employeeCount: await getEmployeeCount(employer.id), createdAt: employer.createdAt.toISOString() });
 });
 
 router.delete("/employers/:id", async (req, res) => {
@@ -115,6 +113,7 @@ router.post("/employers/:id/upload-census", async (req, res) => {
 
     try {
       await db.insert(employeesTable).values({
+        employerId: employer.id,
         firstName, lastName, email,
         phone: row["phone"] || null,
         department: row["department"] || null,
