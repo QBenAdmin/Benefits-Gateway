@@ -9,6 +9,7 @@
 export interface IntegrationInput {
   name: string;
   provider: string;
+  type?: string;
   apiKey?: string;
   apiEndpoint?: string;
   notes?: string;

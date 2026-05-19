@@ -26,7 +26,7 @@ import { format } from "date-fns";
 
 export default function Users() {
   const [search, setSearch] = useState("");
-  const { data: users, isLoading } = useListUsers(undefined, { query: { queryKey: getListUsersQueryKey() } });
+  const { data: users, isLoading } = useListUsers({ query: { queryKey: getListUsersQueryKey() } });
   
   const filteredUsers = users?.filter(user => 
     user.firstName.toLowerCase().includes(search.toLowerCase()) || 
@@ -144,7 +144,7 @@ function UserActions({ user }: { user: any }) {
   const updateMutation = useUpdateUser();
 
   const handleDelete = () => {
-    deleteMutation.mutate({ params: { id: user.id } }, {
+    deleteMutation.mutate({ id: user.id }, {
       onSuccess: () => {
         toast({ title: "User deleted successfully" });
         queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
@@ -157,7 +157,7 @@ function UserActions({ user }: { user: any }) {
   };
 
   const handleToggleActive = () => {
-    updateMutation.mutate({ params: { id: user.id }, data: { isActive: !user.isActive } }, {
+    updateMutation.mutate({ id: user.id, data: { isActive: !user.isActive } }, {
       onSuccess: () => {
         toast({ title: `User ${user.isActive ? 'deactivated' : 'activated'} successfully` });
         queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
@@ -216,7 +216,7 @@ function AddUserDialog() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const createUser = useCreateUser();
-  const { data: employers } = useListEmployers(undefined, { query: { queryKey: getListEmployersQueryKey() } });
+  const { data: employers } = useListEmployers({ query: { queryKey: getListEmployersQueryKey() } });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -317,7 +317,7 @@ function EditUserDialog({ open, setOpen, user }: { open: boolean, setOpen: (v: b
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const updateUser = useUpdateUser();
-  const { data: employers } = useListEmployers(undefined, { query: { queryKey: getListEmployersQueryKey() } });
+  const { data: employers } = useListEmployers({ query: { queryKey: getListEmployersQueryKey() } });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -330,7 +330,7 @@ function EditUserDialog({ open, setOpen, user }: { open: boolean, setOpen: (v: b
       employerId: role === 'admin' ? undefined : (employerId ? parseInt(employerId) : undefined),
     };
     
-    updateUser.mutate({ params: { id: user.id }, data }, {
+    updateUser.mutate({ id: user.id, data }, {
       onSuccess: () => {
         toast({ title: "User updated successfully" });
         queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });

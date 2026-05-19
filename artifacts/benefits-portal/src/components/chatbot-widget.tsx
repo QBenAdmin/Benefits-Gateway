@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useSendChatbotMessage, useGetChatbotTopics } from "@workspace/api-client-react";
+import { useSendChatbotMessage, useGetChatbotTopics, getGetChatbotTopicsQueryKey } from "@workspace/api-client-react";
 import { MessageCircle, X, Send, Bot, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,8 @@ export function ChatbotWidget() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const sendMessage = useSendChatbotMessage();
-  const { data: topics } = useGetChatbotTopics(undefined, {
-    query: { enabled: open }
+  const { data: topics } = useGetChatbotTopics({
+    query: { queryKey: getGetChatbotTopicsQueryKey(), enabled: open }
   });
 
   useEffect(() => {

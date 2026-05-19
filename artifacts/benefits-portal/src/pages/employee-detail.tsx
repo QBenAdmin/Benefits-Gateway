@@ -215,16 +215,16 @@ export default function EmployeeDetail() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span>{format(new Date(dep.dateOfBirth), 'MMM d, yyyy')}</span>
-                        <span className="text-xs text-muted-foreground">{dep.age} years old</span>
+                        <span className="text-xs text-muted-foreground">{dep.dateOfBirth ? new Date().getFullYear() - new Date(dep.dateOfBirth).getFullYear() : "?"} years old</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {dep.daysUntilAgeOut !== null && dep.daysUntilAgeOut <= 60 && dep.daysUntilAgeOut >= 0 ? (
+                      {dep.daysUntilAgeOut != null && dep.daysUntilAgeOut <= 60 && dep.daysUntilAgeOut >= 0 ? (
                         <div className="flex items-center text-amber-600 text-xs font-semibold">
                           <AlertCircle className="mr-1 h-3 w-3" />
                           Ages out in {dep.daysUntilAgeOut} days
                         </div>
-                      ) : dep.daysUntilAgeOut !== null && dep.daysUntilAgeOut < 0 ? (
+                      ) : dep.daysUntilAgeOut != null && dep.daysUntilAgeOut < 0 ? (
                         <div className="flex items-center text-red-600 text-xs font-semibold">
                           <AlertCircle className="mr-1 h-3 w-3" />
                           Aged out
@@ -390,7 +390,7 @@ function EditEmployeeDialog({ open, setOpen, employee }: { open: boolean, setOpe
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries()) as Record<string, any>;
     
-    updateEmp.mutate({ params: { id: employee.id }, data: {
+    updateEmp.mutate({ id: employee.id, data: {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,

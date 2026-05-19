@@ -27,8 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export default function EnrollmentPeriods() {
-  const { data: periods, isLoading } = useListEnrollmentPeriods(undefined, { query: { queryKey: getListEnrollmentPeriodsQueryKey() } });
-  const { data: activeStatus } = useGetActiveEnrollmentPeriod(undefined, { query: { queryKey: getGetActiveEnrollmentPeriodQueryKey() } });
+  const { data: periods, isLoading } = useListEnrollmentPeriods({ query: { queryKey: getListEnrollmentPeriodsQueryKey() } });
+  const { data: activeStatus } = useGetActiveEnrollmentPeriod({ query: { queryKey: getGetActiveEnrollmentPeriodQueryKey() } });
   const activePeriod = activeStatus?.activePeriod;
   
   return (
@@ -156,7 +156,7 @@ function PeriodActions({ period }: { period: any }) {
   const deleteMutation = useDeleteEnrollmentPeriod();
 
   const handleToggleActive = () => {
-    updateMutation.mutate({ params: { id: period.id }, data: { isActive: !period.isActive } }, {
+    updateMutation.mutate({ id: period.id, data: { isActive: !period.isActive } }, {
       onSuccess: () => {
         toast({ title: `Period ${period.isActive ? 'deactivated' : 'activated'}` });
         queryClient.invalidateQueries({ queryKey: getListEnrollmentPeriodsQueryKey() });
@@ -169,7 +169,7 @@ function PeriodActions({ period }: { period: any }) {
   };
 
   const handleDelete = () => {
-    deleteMutation.mutate({ params: { id: period.id } }, {
+    deleteMutation.mutate({ id: period.id }, {
       onSuccess: () => {
         toast({ title: "Period deleted successfully" });
         queryClient.invalidateQueries({ queryKey: getListEnrollmentPeriodsQueryKey() });

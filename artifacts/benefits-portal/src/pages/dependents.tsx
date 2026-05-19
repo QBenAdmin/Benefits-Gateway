@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function DependentsPage() {
-  const { data: agingDependents, isLoading } = useListAgingOutDependents(undefined, { query: { queryKey: getListAgingOutDependentsQueryKey() } });
+  const { data: agingDependents, isLoading } = useListAgingOutDependents({ query: { queryKey: getListAgingOutDependentsQueryKey() } });
   const { toast } = useToast();
 
   const handleSendNotice = (email: string) => {

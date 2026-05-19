@@ -22,7 +22,7 @@ const navigation = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { data: unreadCountObj } = useGetUnreadNotificationCount(undefined, { 
+  const { data: unreadCountObj } = useGetUnreadNotificationCount({ 
     query: { 
       queryKey: getGetUnreadNotificationCountQueryKey(),
       refetchInterval: 30000 

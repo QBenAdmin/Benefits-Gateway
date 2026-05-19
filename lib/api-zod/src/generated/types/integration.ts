@@ -10,6 +10,7 @@ export interface Integration {
   id: number;
   name: string;
   provider: string;
+  type?: string;
   status: string;
   /** @nullable */
   lastSyncAt?: string | null;

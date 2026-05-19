@@ -36,7 +36,7 @@ export default function NotificationsPage() {
   };
 
   const handleMarkRead = (id: number) => {
-    markRead.mutate({ params: { id } }, {
+    markRead.mutate({ id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetUnreadNotificationCountQueryKey() });

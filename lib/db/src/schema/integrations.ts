@@ -6,6 +6,7 @@ export const integrationsTable = pgTable("integrations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   provider: text("provider").notNull(),
+  type: text("type").notNull().default("payroll"),
   status: text("status").notNull().default("disconnected"),
   lastSyncAt: timestamp("last_sync_at"),
   syncedEmployees: integer("synced_employees").notNull().default(0),

@@ -161,7 +161,7 @@ function ApprovalActions({ change }: { change: any }) {
     if (!reviewer.trim()) return;
 
     if (action === 'approve') {
-      approveMutation.mutate({ params: { id: change.id }, data: { reviewedBy: reviewer, notes } }, {
+      approveMutation.mutate({ id: change.id, data: { reviewedBy: reviewer, notes } }, {
         onSuccess: () => {
           toast({ title: "Change approved" });
           queryClient.invalidateQueries({ queryKey: getListEnrollmentChangesQueryKey() });
@@ -170,7 +170,7 @@ function ApprovalActions({ change }: { change: any }) {
         onError: () => toast({ title: "Failed to approve change", variant: "destructive" })
       });
     } else if (action === 'deny') {
-      denyMutation.mutate({ params: { id: change.id }, data: { reviewedBy: reviewer, notes } }, {
+      denyMutation.mutate({ id: change.id, data: { reviewedBy: reviewer, notes } }, {
         onSuccess: () => {
           toast({ title: "Change denied" });
           queryClient.invalidateQueries({ queryKey: getListEnrollmentChangesQueryKey() });

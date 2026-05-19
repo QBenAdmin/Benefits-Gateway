@@ -22,11 +22,11 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Employers() {
   const [search, setSearch] = useState("");
-  const { data: employers, isLoading } = useListEmployers(undefined, { query: { queryKey: getListEmployersQueryKey() } });
+  const { data: employers, isLoading } = useListEmployers({ query: { queryKey: getListEmployersQueryKey() } });
   
   const filteredEmployers = employers?.filter(emp => 
     emp.name.toLowerCase().includes(search.toLowerCase()) || 
-    emp.ein.includes(search)
+    (emp.ein ?? "").includes(search)
   );
 
   return (
@@ -131,7 +131,7 @@ function EmployerActions({ employer }: { employer: any }) {
   const deleteMutation = useDeleteEmployer();
 
   const handleDelete = () => {
-    deleteMutation.mutate({ params: { id: employer.id } }, {
+    deleteMutation.mutate({ id: employer.id }, {
       onSuccess: () => {
         toast({ title: "Employer deleted successfully" });
         queryClient.invalidateQueries({ queryKey: getListEmployersQueryKey() });
@@ -192,7 +192,8 @@ function AddEmployerDialog() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries()) as Record<string, any>;
+    const raw = Object.fromEntries(formData.entries()) as Record<string, any>;
+    const data = { name: raw.name as string, ...raw };
     
     createEmployer.mutate({ data }, {
       onSuccess: () => {
@@ -287,7 +288,7 @@ function EditEmployerDialog({ open, setOpen, employer }: { open: boolean, setOpe
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries()) as Record<string, any>;
     
-    updateEmployer.mutate({ params: { id: employer.id }, data }, {
+    updateEmployer.mutate({ id: employer.id, data }, {
       onSuccess: () => {
         toast({ title: "Employer updated successfully" });
         queryClient.invalidateQueries({ queryKey: getListEmployersQueryKey() });
@@ -372,11 +373,11 @@ function UploadCensusDialog({ open, setOpen, employer }: { open: boolean, setOpe
 
   const handleUpload = () => {
     if (!csvData.trim()) return;
-    uploadCensus.mutate({ params: { id: employer.id }, data: { csvData } }, {
+    uploadCensus.mutate({ id: employer.id, data: { csvData } }, {
       onSuccess: (res) => {
         toast({ 
           title: "Census data processed",
-          description: `Imported: ${res.importedCount}, Skipped: ${res.skippedCount}, Errors: ${res.errorCount}`
+          description: `Imported: ${res.imported}, Skipped: ${res.skipped}, Errors: ${res.errors.length}`
         });
         queryClient.invalidateQueries({ queryKey: getListEmployersQueryKey() });
         setCsvData("");

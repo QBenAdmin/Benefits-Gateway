@@ -8,6 +8,7 @@
 
 export interface IntegrationUpdate {
   name?: string;
+  type?: string;
   apiKey?: string;
   apiEndpoint?: string;
   notes?: string;

@@ -767,6 +767,7 @@ export const ListIntegrationsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "provider": zod.string(),
+  "type": zod.string().optional(),
   "status": zod.string(),
   "lastSyncAt": zod.string().nullish(),
   "syncedEmployees": zod.number(),
@@ -783,6 +784,7 @@ export const ListIntegrationsResponse = zod.array(ListIntegrationsResponseItem)
 export const CreateIntegrationBody = zod.object({
   "name": zod.string(),
   "provider": zod.string(),
+  "type": zod.string().optional(),
   "apiKey": zod.string().optional(),
   "apiEndpoint": zod.string().optional(),
   "notes": zod.string().optional()
@@ -800,6 +802,7 @@ export const GetIntegrationResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "provider": zod.string(),
+  "type": zod.string().optional(),
   "status": zod.string(),
   "lastSyncAt": zod.string().nullish(),
   "syncedEmployees": zod.number(),
@@ -818,6 +821,7 @@ export const UpdateIntegrationParams = zod.object({
 
 export const UpdateIntegrationBody = zod.object({
   "name": zod.string().optional(),
+  "type": zod.string().optional(),
   "apiKey": zod.string().optional(),
   "apiEndpoint": zod.string().optional(),
   "notes": zod.string().optional(),
@@ -828,6 +832,7 @@ export const UpdateIntegrationResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "provider": zod.string(),
+  "type": zod.string().optional(),
   "status": zod.string(),
   "lastSyncAt": zod.string().nullish(),
   "syncedEmployees": zod.number(),
