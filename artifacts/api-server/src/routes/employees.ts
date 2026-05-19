@@ -16,13 +16,7 @@ import {
 const router = Router();
 
 router.get("/employees", async (req, res) => {
-  const { status, search } = req.query as { status?: string; search?: string };
-
-  let conditions: ReturnType<typeof eq>[] = [];
-
-  if (status) {
-    conditions.push(eq(employeesTable.status, status));
-  }
+  const { status, search, employerId } = req.query as { status?: string; search?: string; employerId?: string };
 
   const employees = await db
     .select()
@@ -31,9 +25,13 @@ router.get("/employees", async (req, res) => {
 
   let filtered = employees;
 
+  if (employerId) {
+    filtered = filtered.filter((e) => e.employerId === Number(employerId));
+  }
+
   if (search) {
     const s = search.toLowerCase();
-    filtered = employees.filter(
+    filtered = filtered.filter(
       (e) =>
         e.firstName.toLowerCase().includes(s) ||
         e.lastName.toLowerCase().includes(s) ||
@@ -115,6 +113,7 @@ router.post("/employees/import-csv", async (req, res) => {
 
     try {
       await db.insert(employeesTable).values({
+        employerId: parsed.data.employerId ?? null,
         firstName,
         lastName,
         email,

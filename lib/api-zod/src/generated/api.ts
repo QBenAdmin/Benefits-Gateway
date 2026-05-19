@@ -60,12 +60,14 @@ export const GetEnrollmentByPlanResponse = zod.array(GetEnrollmentByPlanResponse
  * @summary List all employees
  */
 export const ListEmployeesQueryParams = zod.object({
+  "employerId": zod.coerce.number().optional(),
   "status": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional()
 })
 
 export const ListEmployeesResponseItem = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "firstName": zod.string(),
   "lastName": zod.string(),
   "email": zod.string(),
@@ -92,6 +94,7 @@ export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
  * @summary Create a new employee
  */
 export const CreateEmployeeBody = zod.object({
+  "employerId": zod.number().optional(),
   "firstName": zod.string(),
   "lastName": zod.string(),
   "email": zod.string(),
@@ -113,6 +116,7 @@ export const CreateEmployeeBody = zod.object({
  * @summary Import employees from CSV
  */
 export const ImportEmployeesCsvBody = zod.object({
+  "employerId": zod.number().optional(),
   "csvData": zod.string(),
   "mappings": zod.object({
 
@@ -136,6 +140,7 @@ export const GetEmployeeParams = zod.object({
 
 export const GetEmployeeResponse = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "firstName": zod.string(),
   "lastName": zod.string(),
   "email": zod.string(),
@@ -184,6 +189,7 @@ export const UpdateEmployeeBody = zod.object({
 
 export const UpdateEmployeeResponse = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "firstName": zod.string(),
   "lastName": zod.string(),
   "email": zod.string(),
@@ -252,6 +258,7 @@ export const ListBenefitPlansQueryParams = zod.object({
 
 export const ListBenefitPlansResponseItem = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number(),
@@ -276,6 +283,7 @@ export const ListBenefitPlansResponse = zod.array(ListBenefitPlansResponseItem)
  * @summary Create a benefit plan
  */
 export const CreateBenefitPlanBody = zod.object({
+  "employerId": zod.number().optional(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number(),
@@ -300,6 +308,7 @@ export const GetBenefitPlanParams = zod.object({
 
 export const GetBenefitPlanResponse = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number(),
@@ -344,6 +353,7 @@ export const UpdateBenefitPlanBody = zod.object({
 
 export const UpdateBenefitPlanResponse = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number(),
@@ -973,6 +983,7 @@ export const UploadEmployerCensusParams = zod.object({
 })
 
 export const UploadEmployerCensusBody = zod.object({
+  "employerId": zod.number().optional(),
   "csvData": zod.string(),
   "mappings": zod.object({
 

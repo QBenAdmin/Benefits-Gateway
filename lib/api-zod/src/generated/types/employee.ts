@@ -8,6 +8,8 @@
 
 export interface Employee {
   id: number;
+  /** @nullable */
+  employerId?: number | null;
   firstName: string;
   lastName: string;
   email: string;

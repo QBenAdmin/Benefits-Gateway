@@ -8,6 +8,8 @@
 
 export interface BenefitPlan {
   id: number;
+  /** @nullable */
+  employerId?: number | null;
   name: string;
   type: string;
   carrierId: number;

@@ -8,6 +8,7 @@
 import type { CsvImportInputMappings } from './csvImportInputMappings';
 
 export interface CsvImportInput {
+  employerId?: number;
   csvData: string;
   mappings?: CsvImportInputMappings;
 }

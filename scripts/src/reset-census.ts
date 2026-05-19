@@ -396,6 +396,7 @@ async function main() {
     const [employee] = await db
       .insert(employeesTable)
       .values({
+        employerId: employer.id,
         employeeId: empFields.employeeId,
         firstName: empFields.firstName,
         lastName: empFields.lastName,

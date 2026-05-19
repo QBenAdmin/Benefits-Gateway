@@ -7,6 +7,7 @@
  */
 
 export interface BenefitPlanInput {
+  employerId?: number;
   name: string;
   type: string;
   carrierId: number;

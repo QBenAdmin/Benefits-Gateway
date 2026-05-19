@@ -7,6 +7,7 @@
  */
 
 export interface EmployeeInput {
+  employerId?: number;
   firstName: string;
   lastName: string;
   email: string;

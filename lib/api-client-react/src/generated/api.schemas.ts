@@ -38,6 +38,8 @@ export interface PlanEnrollmentCount {
 
 export interface Employee {
   id: number;
+  /** @nullable */
+  employerId?: number | null;
   firstName: string;
   lastName: string;
   email: string;
@@ -71,6 +73,7 @@ export interface Employee {
 }
 
 export interface EmployeeInput {
+  employerId?: number;
   firstName: string;
   lastName: string;
   email: string;
@@ -108,6 +111,7 @@ export interface EmployeeUpdate {
 export type CsvImportInputMappings = { [key: string]: unknown };
 
 export interface CsvImportInput {
+  employerId?: number;
   csvData: string;
   mappings?: CsvImportInputMappings;
 }
@@ -138,6 +142,8 @@ export interface BulkInvitationResult {
 
 export interface BenefitPlan {
   id: number;
+  /** @nullable */
+  employerId?: number | null;
   name: string;
   type: string;
   carrierId: number;
@@ -167,6 +173,7 @@ export interface BenefitPlan {
 }
 
 export interface BenefitPlanInput {
+  employerId?: number;
   name: string;
   type: string;
   carrierId: number;
@@ -681,6 +688,7 @@ export interface ChatbotTopic {
 }
 
 export type ListEmployeesParams = {
+employerId?: number;
 status?: string;
 search?: string;
 };

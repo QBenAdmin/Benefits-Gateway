@@ -105,6 +105,10 @@ paths:
       tags: [employees]
       summary: List all employees
       parameters:
+        - name: employerId
+          in: query
+          schema:
+            type: integer
         - name: status
           in: query
           schema:
@@ -1417,6 +1421,8 @@ components:
       properties:
         id:
           type: integer
+        employerId:
+          type: ["integer", "null"]
         firstName:
           type: string
         lastName:
@@ -1465,6 +1471,8 @@ components:
     EmployeeInput:
       type: object
       properties:
+        employerId:
+          type: integer
         firstName:
           type: string
         lastName:
@@ -1535,6 +1543,8 @@ components:
     CsvImportInput:
       type: object
       properties:
+        employerId:
+          type: integer
         csvData:
           type: string
         mappings:
@@ -1608,6 +1618,8 @@ components:
       properties:
         id:
           type: integer
+        employerId:
+          type: ["integer", "null"]
         name:
           type: string
         type:
@@ -1652,6 +1664,8 @@ components:
     BenefitPlanInput:
       type: object
       properties:
+        employerId:
+          type: integer
         name:
           type: string
         type:

@@ -60,9 +60,14 @@ router.post("/benefits", async (req, res) => {
     return;
   }
 
+  const { employeeCost, employerCost, deductible, outOfPocketMax, carrierId, ...rest } = parsed.data;
   const [plan] = await db.insert(benefitPlansTable).values({
-    ...parsed.data,
-    carrierId: Number(parsed.data.carrierId),
+    ...rest,
+    carrierId: Number(carrierId),
+    employeeCost: employeeCost != null ? String(employeeCost) : null,
+    employerCost: employerCost != null ? String(employerCost) : null,
+    deductible: deductible != null ? String(deductible) : null,
+    outOfPocketMax: outOfPocketMax != null ? String(outOfPocketMax) : null,
   }).returning();
 
   const [carrier] = await db.select().from(carriersTable).where(eq(carriersTable.id, plan.carrierId));
