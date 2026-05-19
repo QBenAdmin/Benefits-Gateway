@@ -1,23 +1,49 @@
-import { useGetEmployee, useUpdateEmployee, getGetEmployeeQueryKey } from "@workspace/api-client-react";
+import { useState } from "react";
+import { 
+  useGetEmployee, 
+  useUpdateEmployee, 
+  getGetEmployeeQueryKey,
+  useListDependents,
+  useCreateDependent,
+  useDeleteDependent,
+  getListDependentsQueryKey
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Mail, Briefcase, Calendar, MapPin, Phone } from "lucide-react";
+import { User, Mail, Briefcase, Calendar, MapPin, Phone, Plus, AlertCircle, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 export default function EmployeeDetail() {
   const { id } = useParams();
   const empId = parseInt(id || "0", 10);
   
-  const { data: employee, isLoading } = useGetEmployee(empId, {
+  const { data: employee, isLoading: empLoading } = useGetEmployee(empId, {
     query: {
       enabled: !!empId,
       queryKey: getGetEmployeeQueryKey(empId)
     }
   });
 
-  if (isLoading) {
+  const { data: dependents, isLoading: depLoading } = useListDependents(empId, {
+    query: {
+      enabled: !!empId,
+      queryKey: getListDependentsQueryKey(empId)
+    }
+  });
+
+  const [editOpen, setEditOpen] = useState(false);
+
+  if (empLoading) {
     return <div className="p-8 space-y-6"><Skeleton className="h-32 w-full" /><Skeleton className="h-64 w-full" /></div>;
   }
 
@@ -39,7 +65,7 @@ export default function EmployeeDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">Edit Profile</Button>
+          <EditEmployeeDialog open={editOpen} setOpen={setEditOpen} employee={employee} />
           <Button>Resend Invite</Button>
         </div>
       </div>
@@ -80,7 +106,7 @@ export default function EmployeeDetail() {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Hired: {employee.hireDate ? employee.hireDate : "Unknown"}</span>
+              <span>Hired: {employee.hireDate ? format(new Date(employee.hireDate), 'MMM d, yyyy') : "Unknown"}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <User className="h-4 w-4 text-muted-foreground" />
@@ -100,6 +126,300 @@ export default function EmployeeDetail() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Dependents</CardTitle>
+          <AddDependentDialog empId={empId} />
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Relationship</TableHead>
+                <TableHead>DOB / Age</TableHead>
+                <TableHead>Alerts</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {depLoading ? (
+                <TableRow><TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+              ) : !dependents || dependents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                    No dependents registered.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                dependents.map(dep => (
+                  <TableRow key={dep.id}>
+                    <TableCell className="font-medium">{dep.firstName} {dep.lastName}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="capitalize">{dep.relationship.replace('_', ' ')}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{format(new Date(dep.dateOfBirth), 'MMM d, yyyy')}</span>
+                        <span className="text-xs text-muted-foreground">{dep.age} years old</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {dep.daysUntilAgeOut !== null && dep.daysUntilAgeOut <= 60 && dep.daysUntilAgeOut >= 0 ? (
+                        <div className="flex items-center text-amber-600 text-xs font-semibold">
+                          <AlertCircle className="mr-1 h-3 w-3" />
+                          Ages out in {dep.daysUntilAgeOut} days
+                        </div>
+                      ) : dep.daysUntilAgeOut !== null && dep.daysUntilAgeOut < 0 ? (
+                        <div className="flex items-center text-red-600 text-xs font-semibold">
+                          <AlertCircle className="mr-1 h-3 w-3" />
+                          Aged out
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <RemoveDependentAction depId={dep.id} empId={empId} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+function RemoveDependentAction({ depId, empId }: { depId: number, empId: number }) {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const deleteDep = useDeleteDependent();
+
+  const handleRemove = () => {
+    deleteDep.mutate({ id: depId }, {
+      onSuccess: () => {
+        toast({ title: "Dependent removed" });
+        queryClient.invalidateQueries({ queryKey: getListDependentsQueryKey(empId) });
+        setOpen(false);
+      },
+      onError: () => toast({ title: "Failed to remove dependent", variant: "destructive" })
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+          <Trash className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Remove Dependent</DialogTitle>
+        </DialogHeader>
+        <p className="py-4 text-sm">Are you sure you want to remove this dependent? This may affect enrollment eligibility.</p>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="destructive" onClick={handleRemove} disabled={deleteDep.isPending}>
+            {deleteDep.isPending ? "Removing..." : "Remove"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddDependentDialog({ empId }: { empId: number }) {
+  const [open, setOpen] = useState(false);
+  const [rel, setRel] = useState("child");
+  const [gender, setGender] = useState("M");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const createDep = useCreateDependent();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      relationship: rel,
+      dateOfBirth: formData.get("dateOfBirth") as string,
+      gender: gender,
+      ssn: formData.get("ssn") as string || undefined
+    };
+
+    createDep.mutate({ employeeId: empId, data }, {
+      onSuccess: () => {
+        toast({ title: "Dependent added" });
+        queryClient.invalidateQueries({ queryKey: getListDependentsQueryKey(empId) });
+        setOpen(false);
+      },
+      onError: () => toast({ title: "Failed to add dependent", variant: "destructive" })
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="mr-2 h-4 w-4" /> Add Dependent
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Add Dependent</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name *</Label>
+              <Input id="firstName" name="firstName" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name *</Label>
+              <Input id="lastName" name="lastName" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Relationship *</Label>
+              <Select value={rel} onValueChange={setRel}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spouse">Spouse</SelectItem>
+                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="domestic_partner">Domestic Partner</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Date of Birth *</Label>
+              <Input name="dateOfBirth" type="date" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Gender *</Label>
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="M">Male</SelectItem>
+                  <SelectItem value="F">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>SSN (Optional)</Label>
+              <Input name="ssn" placeholder="XXX-XX-XXXX" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={createDep.isPending}>
+              {createDep.isPending ? "Adding..." : "Add Dependent"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditEmployeeDialog({ open, setOpen, employee }: { open: boolean, setOpen: (v: boolean) => void, employee: any }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const updateEmp = useUpdateEmployee();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries()) as Record<string, any>;
+    
+    updateEmp.mutate({ params: { id: employee.id }, data: {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone || null,
+      address: data.address || null,
+      city: data.city || null,
+      state: data.state || null,
+      zip: data.zip || null,
+      department: data.department || null,
+      jobTitle: data.jobTitle || null,
+    } }, {
+      onSuccess: () => {
+        toast({ title: "Employee profile updated" });
+        queryClient.invalidateQueries({ queryKey: getGetEmployeeQueryKey(employee.id) });
+        setOpen(false);
+      },
+      onError: () => toast({ title: "Failed to update profile", variant: "destructive" })
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit Profile</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input id="firstName" name="firstName" defaultValue={employee.firstName} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" name="lastName" defaultValue={employee.lastName} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" defaultValue={employee.email} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input id="phone" name="phone" defaultValue={employee.phone || ""} />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" name="address" defaultValue={employee.address || ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input id="city" name="city" defaultValue={employee.city || ""} />
+            </div>
+            <div className="space-y-2 flex gap-4">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Input id="state" name="state" defaultValue={employee.state || ""} />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="zip">ZIP</Label>
+                <Input id="zip" name="zip" defaultValue={employee.zip || ""} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Department</Label>
+              <Input id="department" name="department" defaultValue={employee.department || ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jobTitle">Job Title</Label>
+              <Input id="jobTitle" name="jobTitle" defaultValue={employee.jobTitle || ""} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={updateEmp.isPending}>
+              {updateEmp.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

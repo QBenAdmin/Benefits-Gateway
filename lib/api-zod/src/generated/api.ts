@@ -850,3 +850,616 @@ export const SyncIntegrationResponse = zod.object({
 })
 
 
+/**
+ * @summary List all employers
+ */
+export const ListEmployersResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "ein": zod.string().nullish(),
+  "industry": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "zip": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactName": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "employeeCount": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListEmployersResponse = zod.array(ListEmployersResponseItem)
+
+
+/**
+ * @summary Create employer
+ */
+export const CreateEmployerBody = zod.object({
+  "name": zod.string(),
+  "ein": zod.string().optional(),
+  "industry": zod.string().optional(),
+  "address": zod.string().optional(),
+  "city": zod.string().optional(),
+  "state": zod.string().optional(),
+  "zip": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get employer by ID
+ */
+export const GetEmployerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEmployerResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "ein": zod.string().nullish(),
+  "industry": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "zip": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactName": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "employeeCount": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update employer
+ */
+export const UpdateEmployerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEmployerBody = zod.object({
+  "name": zod.string().optional(),
+  "ein": zod.string().optional(),
+  "industry": zod.string().optional(),
+  "address": zod.string().optional(),
+  "city": zod.string().optional(),
+  "state": zod.string().optional(),
+  "zip": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateEmployerResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "ein": zod.string().nullish(),
+  "industry": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "zip": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactName": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "employeeCount": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete employer
+ */
+export const DeleteEmployerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Upload employee census CSV for employer
+ */
+export const UploadEmployerCensusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UploadEmployerCensusBody = zod.object({
+  "csvData": zod.string(),
+  "mappings": zod.object({
+
+}).passthrough().optional()
+})
+
+export const UploadEmployerCensusResponse = zod.object({
+  "imported": zod.number(),
+  "skipped": zod.number(),
+  "errors": zod.array(zod.string()),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary List all admin users
+ */
+export const ListUsersResponseItem = zod.object({
+  "id": zod.number(),
+  "employerId": zod.number().nullish(),
+  "employerName": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "isActive": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListUsersResponse = zod.array(ListUsersResponseItem)
+
+
+/**
+ * @summary Create admin user
+ */
+export const CreateUserBody = zod.object({
+  "employerId": zod.number().optional(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "role": zod.string().optional()
+})
+
+
+/**
+ * @summary Get user by ID
+ */
+export const GetUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetUserResponse = zod.object({
+  "id": zod.number(),
+  "employerId": zod.number().nullish(),
+  "employerName": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "isActive": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update user
+ */
+export const UpdateUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateUserBody = zod.object({
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional(),
+  "email": zod.string().optional(),
+  "role": zod.string().optional(),
+  "isActive": zod.boolean().optional(),
+  "employerId": zod.number().optional()
+})
+
+export const UpdateUserResponse = zod.object({
+  "id": zod.number(),
+  "employerId": zod.number().nullish(),
+  "employerName": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "isActive": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete user
+ */
+export const DeleteUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List dependents for an employee
+ */
+export const ListDependentsParams = zod.object({
+  "employeeId": zod.coerce.number()
+})
+
+export const ListDependentsResponseItem = zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "relationship": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.string().nullish(),
+  "status": zod.string(),
+  "ageOutNotifiedAt": zod.string().nullish(),
+  "cobraNoticeSentAt": zod.string().nullish(),
+  "daysUntilAgeOut": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const ListDependentsResponse = zod.array(ListDependentsResponseItem)
+
+
+/**
+ * @summary Add dependent
+ */
+export const CreateDependentParams = zod.object({
+  "employeeId": zod.coerce.number()
+})
+
+export const CreateDependentBody = zod.object({
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "relationship": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.string().optional(),
+  "ssn": zod.string().optional()
+})
+
+
+/**
+ * @summary Update dependent
+ */
+export const UpdateDependentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateDependentBody = zod.object({
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional(),
+  "relationship": zod.string().optional(),
+  "dateOfBirth": zod.string().optional(),
+  "gender": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+export const UpdateDependentResponse = zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "relationship": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.string().nullish(),
+  "status": zod.string(),
+  "ageOutNotifiedAt": zod.string().nullish(),
+  "cobraNoticeSentAt": zod.string().nullish(),
+  "daysUntilAgeOut": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Remove dependent
+ */
+export const DeleteDependentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List dependents turning 26 within 60 days
+ */
+export const ListAgingOutDependentsResponseItem = zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string(),
+  "employeeEmail": zod.string(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "relationship": zod.string(),
+  "dateOfBirth": zod.string(),
+  "turnsAge26On": zod.string(),
+  "daysUntilAgeOut": zod.number(),
+  "ageOutNotifiedAt": zod.string().nullish(),
+  "cobraNoticeSentAt": zod.string().nullish()
+})
+export const ListAgingOutDependentsResponse = zod.array(ListAgingOutDependentsResponseItem)
+
+
+/**
+ * @summary List enrollment periods
+ */
+export const ListEnrollmentPeriodsResponseItem = zod.object({
+  "id": zod.number(),
+  "employerId": zod.number().nullish(),
+  "employerName": zod.string().nullish(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "isActive": zod.boolean(),
+  "allowEmployeeChanges": zod.boolean(),
+  "requireApprovalOutsidePeriod": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "isCurrentlyOpen": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListEnrollmentPeriodsResponse = zod.array(ListEnrollmentPeriodsResponseItem)
+
+
+/**
+ * @summary Create enrollment period
+ */
+export const CreateEnrollmentPeriodBody = zod.object({
+  "employerId": zod.number().optional(),
+  "name": zod.string(),
+  "type": zod.string().optional(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "allowEmployeeChanges": zod.boolean().optional(),
+  "requireApprovalOutsidePeriod": zod.boolean().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Update enrollment period
+ */
+export const UpdateEnrollmentPeriodParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEnrollmentPeriodBody = zod.object({
+  "name": zod.string().optional(),
+  "type": zod.string().optional(),
+  "startDate": zod.string().optional(),
+  "endDate": zod.string().optional(),
+  "isActive": zod.boolean().optional(),
+  "allowEmployeeChanges": zod.boolean().optional(),
+  "requireApprovalOutsidePeriod": zod.boolean().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateEnrollmentPeriodResponse = zod.object({
+  "id": zod.number(),
+  "employerId": zod.number().nullish(),
+  "employerName": zod.string().nullish(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "isActive": zod.boolean(),
+  "allowEmployeeChanges": zod.boolean(),
+  "requireApprovalOutsidePeriod": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "isCurrentlyOpen": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete enrollment period
+ */
+export const DeleteEnrollmentPeriodParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get currently active enrollment period
+ */
+export const GetActiveEnrollmentPeriodResponse = zod.object({
+  "isOpen": zod.boolean(),
+  "activePeriod": zod.object({
+  "id": zod.number(),
+  "employerId": zod.number().nullish(),
+  "employerName": zod.string().nullish(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "isActive": zod.boolean(),
+  "allowEmployeeChanges": zod.boolean(),
+  "requireApprovalOutsidePeriod": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "isCurrentlyOpen": zod.boolean(),
+  "createdAt": zod.string()
+}).optional(),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary List pending enrollment change requests
+ */
+export const ListEnrollmentChangesQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const ListEnrollmentChangesResponseItem = zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "employeeEmail": zod.string().nullish(),
+  "changeType": zod.string(),
+  "description": zod.string(),
+  "previousValue": zod.string().nullish(),
+  "newValue": zod.string().nullish(),
+  "status": zod.string(),
+  "reviewedBy": zod.string().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNotes": zod.string().nullish(),
+  "submittedOutsidePeriod": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListEnrollmentChangesResponse = zod.array(ListEnrollmentChangesResponseItem)
+
+
+/**
+ * @summary Approve an enrollment change
+ */
+export const ApproveEnrollmentChangeParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ApproveEnrollmentChangeBody = zod.object({
+  "reviewedBy": zod.string(),
+  "notes": zod.string().optional()
+})
+
+export const ApproveEnrollmentChangeResponse = zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "employeeEmail": zod.string().nullish(),
+  "changeType": zod.string(),
+  "description": zod.string(),
+  "previousValue": zod.string().nullish(),
+  "newValue": zod.string().nullish(),
+  "status": zod.string(),
+  "reviewedBy": zod.string().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNotes": zod.string().nullish(),
+  "submittedOutsidePeriod": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Deny an enrollment change
+ */
+export const DenyEnrollmentChangeParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DenyEnrollmentChangeBody = zod.object({
+  "reviewedBy": zod.string(),
+  "notes": zod.string().optional()
+})
+
+export const DenyEnrollmentChangeResponse = zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "employeeEmail": zod.string().nullish(),
+  "changeType": zod.string(),
+  "description": zod.string(),
+  "previousValue": zod.string().nullish(),
+  "newValue": zod.string().nullish(),
+  "status": zod.string(),
+  "reviewedBy": zod.string().nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNotes": zod.string().nullish(),
+  "submittedOutsidePeriod": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary List notifications
+ */
+export const ListNotificationsQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "type": zod.coerce.string().optional()
+})
+
+export const ListNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "type": zod.string(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "relatedEmployeeId": zod.number().nullish(),
+  "relatedEmployeeName": zod.string().nullish(),
+  "relatedDependentId": zod.number().nullish(),
+  "relatedChangeId": zod.number().nullish(),
+  "priority": zod.string(),
+  "status": zod.string(),
+  "isRead": zod.boolean(),
+  "actionUrl": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
+
+
+/**
+ * @summary Mark a notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.number(),
+  "type": zod.string(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "relatedEmployeeId": zod.number().nullish(),
+  "relatedEmployeeName": zod.string().nullish(),
+  "relatedDependentId": zod.number().nullish(),
+  "relatedChangeId": zod.number().nullish(),
+  "priority": zod.string(),
+  "status": zod.string(),
+  "isRead": zod.boolean(),
+  "actionUrl": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  "success": zod.boolean(),
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Get count of unread notifications
+ */
+export const GetUnreadNotificationCountResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Send a message to the benefits chatbot
+ */
+export const SendChatbotMessageBody = zod.object({
+  "message": zod.string(),
+  "sessionId": zod.string().optional()
+})
+
+export const SendChatbotMessageResponse = zod.object({
+  "response": zod.string(),
+  "topicId": zod.string().nullish(),
+  "suggestions": zod.array(zod.string()),
+  "sessionId": zod.string()
+})
+
+
+/**
+ * @summary Get list of chatbot topics
+ */
+export const GetChatbotTopicsResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords": zod.array(zod.string())
+})
+export const GetChatbotTopicsResponse = zod.array(GetChatbotTopicsResponseItem)
+
+

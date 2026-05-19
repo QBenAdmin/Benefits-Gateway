@@ -408,6 +408,278 @@ export interface IntegrationUpdate {
   status?: string;
 }
 
+export interface Employer {
+  id: number;
+  name: string;
+  /** @nullable */
+  ein?: string | null;
+  /** @nullable */
+  industry?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  zip?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  contactEmail?: string | null;
+  /** @nullable */
+  contactName?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  employeeCount: number;
+  createdAt: string;
+}
+
+export interface EmployerInput {
+  name: string;
+  ein?: string;
+  industry?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
+  contactEmail?: string;
+  contactName?: string;
+  notes?: string;
+}
+
+export interface EmployerUpdate {
+  name?: string;
+  ein?: string;
+  industry?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
+  contactEmail?: string;
+  contactName?: string;
+  notes?: string;
+}
+
+export interface AdminUser {
+  id: number;
+  /** @nullable */
+  employerId?: number | null;
+  /** @nullable */
+  employerName?: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  /** @nullable */
+  lastLoginAt?: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserInput {
+  employerId?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role?: string;
+}
+
+export interface AdminUserUpdate {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
+  isActive?: boolean;
+  employerId?: number;
+}
+
+export interface Dependent {
+  id: number;
+  employeeId: number;
+  /** @nullable */
+  employeeName?: string | null;
+  firstName: string;
+  lastName: string;
+  relationship: string;
+  dateOfBirth: string;
+  /** @nullable */
+  gender?: string | null;
+  status: string;
+  /** @nullable */
+  ageOutNotifiedAt?: string | null;
+  /** @nullable */
+  cobraNoticeSentAt?: string | null;
+  /** @nullable */
+  daysUntilAgeOut?: number | null;
+  createdAt: string;
+}
+
+export interface DependentInput {
+  firstName: string;
+  lastName: string;
+  relationship: string;
+  dateOfBirth: string;
+  gender?: string;
+  ssn?: string;
+}
+
+export interface DependentUpdate {
+  firstName?: string;
+  lastName?: string;
+  relationship?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  status?: string;
+}
+
+export interface AgingOutDependent {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  employeeEmail: string;
+  firstName: string;
+  lastName: string;
+  relationship: string;
+  dateOfBirth: string;
+  turnsAge26On: string;
+  daysUntilAgeOut: number;
+  /** @nullable */
+  ageOutNotifiedAt?: string | null;
+  /** @nullable */
+  cobraNoticeSentAt?: string | null;
+}
+
+export interface EnrollmentPeriod {
+  id: number;
+  /** @nullable */
+  employerId?: number | null;
+  /** @nullable */
+  employerName?: string | null;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  allowEmployeeChanges: boolean;
+  requireApprovalOutsidePeriod: boolean;
+  /** @nullable */
+  notes?: string | null;
+  isCurrentlyOpen: boolean;
+  createdAt: string;
+}
+
+export interface EnrollmentPeriodInput {
+  employerId?: number;
+  name: string;
+  type?: string;
+  startDate: string;
+  endDate: string;
+  allowEmployeeChanges?: boolean;
+  requireApprovalOutsidePeriod?: boolean;
+  notes?: string;
+}
+
+export interface EnrollmentPeriodUpdate {
+  name?: string;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  isActive?: boolean;
+  allowEmployeeChanges?: boolean;
+  requireApprovalOutsidePeriod?: boolean;
+  notes?: string;
+}
+
+export interface EnrollmentPeriodStatus {
+  isOpen: boolean;
+  activePeriod?: EnrollmentPeriod;
+  message: string;
+}
+
+export interface EnrollmentChange {
+  id: number;
+  employeeId: number;
+  /** @nullable */
+  employeeName?: string | null;
+  /** @nullable */
+  employeeEmail?: string | null;
+  changeType: string;
+  description: string;
+  /** @nullable */
+  previousValue?: string | null;
+  /** @nullable */
+  newValue?: string | null;
+  status: string;
+  /** @nullable */
+  reviewedBy?: string | null;
+  /** @nullable */
+  reviewedAt?: string | null;
+  /** @nullable */
+  reviewNotes?: string | null;
+  submittedOutsidePeriod: string;
+  createdAt: string;
+}
+
+export interface ChangeDecisionInput {
+  reviewedBy: string;
+  notes?: string;
+}
+
+export interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  /** @nullable */
+  relatedEmployeeId?: number | null;
+  /** @nullable */
+  relatedEmployeeName?: string | null;
+  /** @nullable */
+  relatedDependentId?: number | null;
+  /** @nullable */
+  relatedChangeId?: number | null;
+  priority: string;
+  status: string;
+  isRead: boolean;
+  /** @nullable */
+  actionUrl?: string | null;
+  createdAt: string;
+}
+
+export interface BulkActionResult {
+  success: boolean;
+  count: number;
+}
+
+export interface UnreadCount {
+  count: number;
+}
+
+export interface ChatbotMessageInput {
+  message: string;
+  sessionId?: string;
+}
+
+export interface ChatbotResponse {
+  response: string;
+  /** @nullable */
+  topicId?: string | null;
+  suggestions: string[];
+  sessionId: string;
+}
+
+export interface ChatbotTopic {
+  id: string;
+  title: string;
+  description: string;
+  keywords: string[];
+}
+
 export type ListEmployeesParams = {
 status?: string;
 search?: string;
@@ -427,5 +699,14 @@ planId?: number;
 export type ListDocumentsParams = {
 type?: string;
 carrierId?: number;
+};
+
+export type ListEnrollmentChangesParams = {
+status?: string;
+};
+
+export type ListNotificationsParams = {
+status?: string;
+type?: string;
 };
 

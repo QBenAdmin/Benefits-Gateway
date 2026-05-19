@@ -9,12 +9,22 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: employers
+    description: Employer/company management
+  - name: users
+    description: Admin user management
   - name: employees
     description: Employee management
+  - name: dependents
+    description: Employee dependent management
   - name: benefits
     description: Benefits plan management
   - name: enrollments
     description: Enrollment management
+  - name: enrollment-periods
+    description: Enrollment window management
+  - name: enrollment-changes
+    description: Change approval workflow
   - name: carriers
     description: Insurance carrier management
   - name: documents
@@ -25,6 +35,10 @@ tags:
     description: Dashboard summary data
   - name: invitations
     description: Employee invitation management
+  - name: notifications
+    description: System notifications and alerts
+  - name: chatbot
+    description: Benefits Q&A chatbot
 
 paths:
   /healthz:
@@ -763,6 +777,565 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImportResult"
+
+  /employers:
+    get:
+      operationId: listEmployers
+      tags: [employers]
+      summary: List all employers
+      responses:
+        "200":
+          description: List of employers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employer"
+    post:
+      operationId: createEmployer
+      tags: [employers]
+      summary: Create employer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployerInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employer"
+
+  /employers/{id}:
+    get:
+      operationId: getEmployer
+      tags: [employers]
+      summary: Get employer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employer"
+    patch:
+      operationId: updateEmployer
+      tags: [employers]
+      summary: Update employer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployerUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employer"
+    delete:
+      operationId: deleteEmployer
+      tags: [employers]
+      summary: Delete employer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /employers/{id}/upload-census:
+    post:
+      operationId: uploadEmployerCensus
+      tags: [employers]
+      summary: Upload employee census CSV for employer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CsvImportInput"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  # Users
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all admin users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create admin user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Dependents
+  /employees/{employeeId}/dependents:
+    get:
+      operationId: listDependents
+      tags: [dependents]
+      summary: List dependents for an employee
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of dependents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dependent"
+    post:
+      operationId: createDependent
+      tags: [dependents]
+      summary: Add dependent
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DependentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dependent"
+
+  /dependents/{id}:
+    patch:
+      operationId: updateDependent
+      tags: [dependents]
+      summary: Update dependent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DependentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dependent"
+    delete:
+      operationId: deleteDependent
+      tags: [dependents]
+      summary: Remove dependent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /dependents/aging-out:
+    get:
+      operationId: listAgingOutDependents
+      tags: [dependents]
+      summary: List dependents turning 26 within 60 days
+      responses:
+        "200":
+          description: Dependents about to age out
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgingOutDependent"
+
+  # Enrollment Periods
+  /enrollment-periods:
+    get:
+      operationId: listEnrollmentPeriods
+      tags: [enrollment-periods]
+      summary: List enrollment periods
+      responses:
+        "200":
+          description: List of enrollment periods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnrollmentPeriod"
+    post:
+      operationId: createEnrollmentPeriod
+      tags: [enrollment-periods]
+      summary: Create enrollment period
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollmentPeriodInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentPeriod"
+
+  /enrollment-periods/{id}:
+    patch:
+      operationId: updateEnrollmentPeriod
+      tags: [enrollment-periods]
+      summary: Update enrollment period
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollmentPeriodUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentPeriod"
+    delete:
+      operationId: deleteEnrollmentPeriod
+      tags: [enrollment-periods]
+      summary: Delete enrollment period
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /enrollment-periods/active:
+    get:
+      operationId: getActiveEnrollmentPeriod
+      tags: [enrollment-periods]
+      summary: Get currently active enrollment period
+      responses:
+        "200":
+          description: Active period or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentPeriodStatus"
+
+  # Enrollment Changes (approval workflow)
+  /enrollment-changes:
+    get:
+      operationId: listEnrollmentChanges
+      tags: [enrollment-changes]
+      summary: List pending enrollment change requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of change requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnrollmentChange"
+
+  /enrollment-changes/{id}/approve:
+    post:
+      operationId: approveEnrollmentChange
+      tags: [enrollment-changes]
+      summary: Approve an enrollment change
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeDecisionInput"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentChange"
+
+  /enrollment-changes/{id}/deny:
+    post:
+      operationId: denyEnrollmentChange
+      tags: [enrollment-changes]
+      summary: Deny an enrollment change
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeDecisionInput"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentChange"
+
+  # Notifications
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/mark-all-read:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkActionResult"
+
+  /notifications/unread-count:
+    get:
+      operationId: getUnreadNotificationCount
+      tags: [notifications]
+      summary: Get count of unread notifications
+      responses:
+        "200":
+          description: Count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCount"
+
+  # Chatbot
+  /chatbot/message:
+    post:
+      operationId: sendChatbotMessage
+      tags: [chatbot]
+      summary: Send a message to the benefits chatbot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatbotMessageInput"
+      responses:
+        "200":
+          description: Chatbot response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatbotResponse"
+
+  /chatbot/topics:
+    get:
+      operationId: getChatbotTopics
+      tags: [chatbot]
+      summary: Get list of chatbot topics
+      responses:
+        "200":
+          description: Topics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatbotTopic"
+
 
 components:
   schemas:
@@ -1519,3 +2092,530 @@ components:
           type: string
         status:
           type: string
+
+    Employer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        ein:
+          type: ["string", "null"]
+        industry:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        zip:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        contactEmail:
+          type: ["string", "null"]
+        contactName:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        employeeCount:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - employeeCount
+        - createdAt
+
+    EmployerInput:
+      type: object
+      properties:
+        name:
+          type: string
+        ein:
+          type: string
+        industry:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        phone:
+          type: string
+        contactEmail:
+          type: string
+        contactName:
+          type: string
+        notes:
+          type: string
+      required:
+        - name
+
+    EmployerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        ein:
+          type: string
+        industry:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        phone:
+          type: string
+        contactEmail:
+          type: string
+        contactName:
+          type: string
+        notes:
+          type: string
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        employerId:
+          type: ["integer", "null"]
+        employerName:
+          type: ["string", "null"]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
+        lastLoginAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - role
+        - isActive
+        - createdAt
+
+    AdminUserInput:
+      type: object
+      properties:
+        employerId:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+      required:
+        - firstName
+        - lastName
+        - email
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
+        employerId:
+          type: integer
+
+    Dependent:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: ["string", "null"]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        relationship:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: ["string", "null"]
+        status:
+          type: string
+        ageOutNotifiedAt:
+          type: ["string", "null"]
+        cobraNoticeSentAt:
+          type: ["string", "null"]
+        daysUntilAgeOut:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - employeeId
+        - firstName
+        - lastName
+        - relationship
+        - dateOfBirth
+        - status
+        - createdAt
+
+    DependentInput:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        relationship:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        ssn:
+          type: string
+      required:
+        - firstName
+        - lastName
+        - relationship
+        - dateOfBirth
+
+    DependentUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        relationship:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        status:
+          type: string
+
+    AgingOutDependent:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+        employeeEmail:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        relationship:
+          type: string
+        dateOfBirth:
+          type: string
+        turnsAge26On:
+          type: string
+        daysUntilAgeOut:
+          type: integer
+        ageOutNotifiedAt:
+          type: ["string", "null"]
+        cobraNoticeSentAt:
+          type: ["string", "null"]
+      required:
+        - id
+        - employeeId
+        - employeeName
+        - employeeEmail
+        - firstName
+        - lastName
+        - relationship
+        - dateOfBirth
+        - turnsAge26On
+        - daysUntilAgeOut
+
+    EnrollmentPeriod:
+      type: object
+      properties:
+        id:
+          type: integer
+        employerId:
+          type: ["integer", "null"]
+        employerName:
+          type: ["string", "null"]
+        name:
+          type: string
+        type:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        isActive:
+          type: boolean
+        allowEmployeeChanges:
+          type: boolean
+        requireApprovalOutsidePeriod:
+          type: boolean
+        notes:
+          type: ["string", "null"]
+        isCurrentlyOpen:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - startDate
+        - endDate
+        - isActive
+        - allowEmployeeChanges
+        - requireApprovalOutsidePeriod
+        - isCurrentlyOpen
+        - createdAt
+
+    EnrollmentPeriodInput:
+      type: object
+      properties:
+        employerId:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        allowEmployeeChanges:
+          type: boolean
+        requireApprovalOutsidePeriod:
+          type: boolean
+        notes:
+          type: string
+      required:
+        - name
+        - startDate
+        - endDate
+
+    EnrollmentPeriodUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        isActive:
+          type: boolean
+        allowEmployeeChanges:
+          type: boolean
+        requireApprovalOutsidePeriod:
+          type: boolean
+        notes:
+          type: string
+
+    EnrollmentPeriodStatus:
+      type: object
+      properties:
+        isOpen:
+          type: boolean
+        activePeriod:
+          $ref: "#/components/schemas/EnrollmentPeriod"
+        message:
+          type: string
+      required:
+        - isOpen
+        - message
+
+    EnrollmentChange:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: ["string", "null"]
+        employeeEmail:
+          type: ["string", "null"]
+        changeType:
+          type: string
+        description:
+          type: string
+        previousValue:
+          type: ["string", "null"]
+        newValue:
+          type: ["string", "null"]
+        status:
+          type: string
+        reviewedBy:
+          type: ["string", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+        reviewNotes:
+          type: ["string", "null"]
+        submittedOutsidePeriod:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - employeeId
+        - changeType
+        - description
+        - status
+        - submittedOutsidePeriod
+        - createdAt
+
+    ChangeDecisionInput:
+      type: object
+      properties:
+        reviewedBy:
+          type: string
+        notes:
+          type: string
+      required:
+        - reviewedBy
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        relatedEmployeeId:
+          type: ["integer", "null"]
+        relatedEmployeeName:
+          type: ["string", "null"]
+        relatedDependentId:
+          type: ["integer", "null"]
+        relatedChangeId:
+          type: ["integer", "null"]
+        priority:
+          type: string
+        status:
+          type: string
+        isRead:
+          type: boolean
+        actionUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - title
+        - message
+        - priority
+        - status
+        - isRead
+        - createdAt
+
+    BulkActionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        count:
+          type: integer
+      required:
+        - success
+        - count
+
+    UnreadCount:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+        - count
+
+    ChatbotMessageInput:
+      type: object
+      properties:
+        message:
+          type: string
+        sessionId:
+          type: string
+      required:
+        - message
+
+    ChatbotResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        topicId:
+          type: ["string", "null"]
+        suggestions:
+          type: array
+          items:
+            type: string
+        sessionId:
+          type: string
+      required:
+        - response
+        - suggestions
+        - sessionId
+
+    ChatbotTopic:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - title
+        - description
+        - keywords

@@ -13,6 +13,12 @@ import Benefits from "@/pages/benefits";
 import Carriers from "@/pages/carriers";
 import Documents from "@/pages/documents";
 import Integrations from "@/pages/integrations";
+import Employers from "@/pages/employers";
+import Users from "@/pages/users";
+import DependentsPage from "@/pages/dependents";
+import EnrollmentPeriods from "@/pages/enrollment-periods";
+import Approvals from "@/pages/approvals";
+import NotificationsPage from "@/pages/notifications";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +34,12 @@ function Router() {
         <Route path="/carriers" component={Carriers} />
         <Route path="/documents" component={Documents} />
         <Route path="/integrations" component={Integrations} />
+        <Route path="/employers" component={Employers} />
+        <Route path="/users" component={Users} />
+        <Route path="/dependents" component={DependentsPage} />
+        <Route path="/enrollment-periods" component={EnrollmentPeriods} />
+        <Route path="/approvals" component={Approvals} />
+        <Route path="/notifications" component={NotificationsPage} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
