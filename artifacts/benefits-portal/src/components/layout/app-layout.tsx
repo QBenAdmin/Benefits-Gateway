@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, FileText, Heart, Building2, Blocks, Users2, UserCheck, Calendar, ClipboardCheck, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey } from "@workspace/api-client-react";
+import { ChatbotWidget } from "@/components/chatbot-widget";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -95,6 +96,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+      <ChatbotWidget />
     </div>
   );
 }

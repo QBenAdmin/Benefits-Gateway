@@ -6,14 +6,16 @@ import {
   useListDependents,
   useCreateDependent,
   useDeleteDependent,
-  getListDependentsQueryKey
+  getListDependentsQueryKey,
+  useListEnrollments,
+  getListEnrollmentsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Mail, Briefcase, Calendar, MapPin, Phone, Plus, AlertCircle, Trash } from "lucide-react";
+import { User, Mail, Briefcase, Calendar, MapPin, Phone, Plus, AlertCircle, Trash, Heart, Building2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -40,6 +42,11 @@ export default function EmployeeDetail() {
       queryKey: getListDependentsQueryKey(empId)
     }
   });
+
+  const { data: enrollments, isLoading: enrLoading } = useListEnrollments(
+    { employeeId: empId },
+    { query: { enabled: !!empId, queryKey: getListEnrollmentsQueryKey({ employeeId: empId }) } }
+  );
 
   const [editOpen, setEditOpen] = useState(false);
 
@@ -121,9 +128,55 @@ export default function EmployeeDetail() {
           <CardTitle>Enrollment Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            Enrollment data would be displayed here.
-          </div>
+          {enrLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ) : !enrollments || enrollments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              No active enrollments found.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {enrollments.map((enr) => (
+                <div key={enr.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center shrink-0">
+                      {enr.planType === 'medical' ? (
+                        <Heart className="h-4 w-4 text-accent-foreground" />
+                      ) : enr.planType === 'dental' || enr.planType === 'vision' ? (
+                        <Shield className="h-4 w-4 text-accent-foreground" />
+                      ) : (
+                        <Building2 className="h-4 w-4 text-accent-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium leading-tight">{enr.planName}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {enr.planType} · {enr.carrierName} · {(enr.coverageLevel ?? '').replace(/_/g, ' ')}
+                      </p>
+                      {enr.effectiveDate && (
+                        <p className="text-xs text-muted-foreground">
+                          Effective {format(new Date(enr.effectiveDate), 'MMM d, yyyy')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant={enr.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                      {enr.status}
+                    </Badge>
+                    {enr.transmissionStatus && (
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {enr.transmissionStatus === 'transmitted' ? '✓ Transmitted' : enr.transmissionStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
