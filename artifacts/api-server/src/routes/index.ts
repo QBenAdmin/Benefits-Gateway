@@ -14,6 +14,7 @@ import enrollmentPeriodsRouter from "./enrollment_periods";
 import enrollmentChangesRouter from "./enrollment_changes";
 import notificationsRouter from "./notifications";
 import chatbotRouter from "./chatbot";
+import seedRouter from "./seed";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(enrollmentPeriodsRouter);
 router.use(enrollmentChangesRouter);
 router.use(notificationsRouter);
 router.use(chatbotRouter);
+router.use(seedRouter);
 
 export default router;
