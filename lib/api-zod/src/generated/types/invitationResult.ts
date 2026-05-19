@@ -10,4 +10,6 @@ export interface InvitationResult {
   success: boolean;
   message: string;
   sentTo: string;
+  emailDelivered?: boolean;
+  emailSimulated?: boolean;
 }

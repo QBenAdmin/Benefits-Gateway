@@ -75,6 +75,8 @@ import type {
   ListNotificationsParams,
   Notification,
   PlanEnrollmentCount,
+  SendNoticesInput,
+  SendNoticesResult,
   TransmitInput,
   TransmitResult,
   UnreadCount
@@ -4524,6 +4526,78 @@ export function useGetActiveEnrollmentPeriod<TData = Awaited<ReturnType<typeof g
 
 
 
+
+export const getSendEnrollmentNoticesUrl = (id: number,) => {
+
+
+
+
+  return `/api/enrollment-periods/${id}/send-notices`
+}
+
+/**
+ * @summary Send enrollment notices to all active employees
+ */
+export const sendEnrollmentNotices = async (id: number,
+    sendNoticesInput: SendNoticesInput, options?: RequestInit): Promise<SendNoticesResult> => {
+
+  return customFetch<SendNoticesResult>(getSendEnrollmentNoticesUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      sendNoticesInput,)
+  }
+);}
+
+
+
+
+export const getSendEnrollmentNoticesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendEnrollmentNotices>>, TError,{id: number;data: BodyType<SendNoticesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendEnrollmentNotices>>, TError,{id: number;data: BodyType<SendNoticesInput>}, TContext> => {
+
+const mutationKey = ['sendEnrollmentNotices'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendEnrollmentNotices>>, {id: number;data: BodyType<SendNoticesInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sendEnrollmentNotices(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendEnrollmentNoticesMutationResult = NonNullable<Awaited<ReturnType<typeof sendEnrollmentNotices>>>
+    export type SendEnrollmentNoticesMutationBody = BodyType<SendNoticesInput>
+    export type SendEnrollmentNoticesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send enrollment notices to all active employees
+ */
+export const useSendEnrollmentNotices = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendEnrollmentNotices>>, TError,{id: number;data: BodyType<SendNoticesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendEnrollmentNotices>>,
+        TError,
+        {id: number;data: BodyType<SendNoticesInput>},
+        TContext
+      > => {
+      return useMutation(getSendEnrollmentNoticesMutationOptions(options));
+    }
 
 export const getListEnrollmentChangesUrl = (params?: ListEnrollmentChangesParams,) => {
   const normalizedParams = new URLSearchParams();

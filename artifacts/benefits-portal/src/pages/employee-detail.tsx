@@ -8,7 +8,8 @@ import {
   useDeleteDependent,
   getListDependentsQueryKey,
   useListEnrollments,
-  getListEnrollmentsQueryKey
+  getListEnrollmentsQueryKey,
+  useSendEmployeeInvitation,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "wouter";
@@ -49,6 +50,24 @@ export default function EmployeeDetail() {
   );
 
   const [editOpen, setEditOpen] = useState(false);
+  const { toast } = useToast();
+  const sendInvite = useSendEmployeeInvitation();
+
+  const handleResendInvite = () => {
+    sendInvite.mutate({ id: empId }, {
+      onSuccess: (data) => {
+        toast({
+          title: data.emailSimulated
+            ? "Invite recorded (SMTP not configured)"
+            : "Invite sent",
+          description: data.emailSimulated
+            ? `Invitation status updated for ${data.sentTo}. Configure SMTP to deliver real emails.`
+            : `Enrollment invitation delivered to ${data.sentTo}.`,
+        });
+      },
+      onError: () => toast({ title: "Failed to send invite", variant: "destructive" }),
+    });
+  };
 
   if (empLoading) {
     return <div className="p-8 space-y-6"><Skeleton className="h-32 w-full" /><Skeleton className="h-64 w-full" /></div>;
@@ -67,13 +86,20 @@ export default function EmployeeDetail() {
             <h2 className="text-3xl font-[Outfit] font-semibold tracking-tight">{employee.firstName} {employee.lastName}</h2>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>{employee.status}</Badge>
-              <Badge variant="outline" className="capitalize">{employee.invitationStatus} Invite</Badge>
+              <Badge variant="outline">
+                {employee.invitationStatus === 'not_invited' ? 'Not Yet Invited'
+                  : employee.invitationStatus === 'invited' ? 'Invite Sent'
+                  : employee.invitationStatus === 'accepted' ? 'Portal Active'
+                  : employee.invitationStatus}
+              </Badge>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <EditEmployeeDialog open={editOpen} setOpen={setEditOpen} employee={employee} />
-          <Button>Resend Invite</Button>
+          <Button onClick={handleResendInvite} disabled={sendInvite.isPending}>
+            {sendInvite.isPending ? "Sending…" : "Resend Invite"}
+          </Button>
         </div>
       </div>
 
@@ -422,6 +448,7 @@ function EditEmployeeDialog({ open, setOpen, employee }: { open: boolean, setOpe
       zip: data.zip || null,
       department: data.department || null,
       jobTitle: data.jobTitle || null,
+      hireDate: data.hireDate || null,
     } }, {
       onSuccess: () => {
         toast({ title: "Employee profile updated" });
@@ -484,6 +511,10 @@ function EditEmployeeDialog({ open, setOpen, employee }: { open: boolean, setOpe
             <div className="space-y-2">
               <Label htmlFor="jobTitle">Job Title</Label>
               <Input id="jobTitle" name="jobTitle" defaultValue={employee.jobTitle || ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hireDate">Date of Hire (DOH)</Label>
+              <Input id="hireDate" name="hireDate" type="date" defaultValue={employee.hireDate || ""} />
             </div>
           </div>
           <DialogFooter>

@@ -234,7 +234,9 @@ export const SendEmployeeInvitationParams = zod.object({
 export const SendEmployeeInvitationResponse = zod.object({
   "success": zod.boolean(),
   "message": zod.string(),
-  "sentTo": zod.string()
+  "sentTo": zod.string(),
+  "emailDelivered": zod.boolean().optional(),
+  "emailSimulated": zod.boolean().optional()
 })
 
 
@@ -1307,6 +1309,27 @@ export const GetActiveEnrollmentPeriodResponse = zod.object({
   "createdAt": zod.string()
 }).optional(),
   "message": zod.string()
+})
+
+
+/**
+ * @summary Send enrollment notices to all active employees
+ */
+export const SendEnrollmentNoticesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SendEnrollmentNoticesBody = zod.object({
+  "employerId": zod.number()
+})
+
+export const SendEnrollmentNoticesResponse = zod.object({
+  "sent": zod.number(),
+  "failed": zod.number(),
+  "emailsDelivered": zod.boolean(),
+  "errors": zod.array(zod.string()).optional(),
+  "periodName": zod.string().optional(),
+  "employerName": zod.string().optional()
 })
 
 

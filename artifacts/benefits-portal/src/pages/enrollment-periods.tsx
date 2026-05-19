@@ -6,7 +6,11 @@ import {
   useDeleteEnrollmentPeriod, 
   useGetActiveEnrollmentPeriod,
   getListEnrollmentPeriodsQueryKey,
-  getGetActiveEnrollmentPeriodQueryKey
+  getGetActiveEnrollmentPeriodQueryKey,
+  useSendEnrollmentNotices,
+  useListEmployers,
+  getListEmployersQueryKey,
+  type SendNoticesResult,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,9 +18,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Plus, MoreHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
+import { Calendar, Plus, MoreHorizontal, CheckCircle2, AlertCircle, Mail, Send, Users, Info } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +53,7 @@ export default function EnrollmentPeriods() {
           <AlertTitle>Enrollment is OPEN</AlertTitle>
           <AlertDescription>
             The "{activePeriod.name}" window is currently active until {format(new Date(activePeriod.endDate), 'MMMM d, yyyy')}.
+            {" "}<strong>Send enrollment notices to employees using the Actions menu below.</strong>
           </AlertDescription>
         </Alert>
       ) : (
@@ -150,6 +155,7 @@ export default function EnrollmentPeriods() {
 
 function PeriodActions({ period }: { period: any }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [noticesOpen, setNoticesOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateMutation = useUpdateEnrollmentPeriod();
@@ -191,6 +197,10 @@ function PeriodActions({ period }: { period: any }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setNoticesOpen(true)}>
+            <Mail className="mr-2 h-4 w-4" />
+            Send Enrollment Notices
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleToggleActive}>
             {period.isActive ? "Deactivate Period" : "Activate Period"}
           </DropdownMenuItem>
@@ -199,6 +209,8 @@ function PeriodActions({ period }: { period: any }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <SendNoticesDialog open={noticesOpen} onOpenChange={setNoticesOpen} period={period} />
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
@@ -220,6 +232,179 @@ function PeriodActions({ period }: { period: any }) {
   );
 }
 
+function SendNoticesDialog({
+  open,
+  onOpenChange,
+  period,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  period: any;
+}) {
+  const { toast } = useToast();
+  const { data: employers, isLoading: empLoading } = useListEmployers({ query: { enabled: open, queryKey: getListEmployersQueryKey() } });
+  const sendNotices = useSendEnrollmentNotices();
+  const [employerId, setEmployerId] = useState<string>("");
+  const [result, setResult] = useState<SendNoticesResult | null>(null);
+
+  const selectedEmployer = employers?.find((e: any) => String(e.id) === employerId);
+
+  const handleSend = () => {
+    if (!employerId) return;
+    sendNotices.mutate(
+      { id: period.id, data: { employerId: Number(employerId) } },
+      {
+        onSuccess: (data) => {
+          setResult(data);
+          toast({
+            title: `Notices sent to ${data.sent} employee${data.sent !== 1 ? 's' : ''}`,
+            description: data.emailsDelivered
+              ? "Enrollment notice emails delivered successfully."
+              : `Notices recorded. Configure SMTP credentials to send real emails.`,
+          });
+        },
+        onError: () => {
+          toast({ title: "Failed to send notices", variant: "destructive" });
+        },
+      }
+    );
+  };
+
+  const handleClose = () => {
+    setResult(null);
+    setEmployerId("");
+    onOpenChange(false);
+  };
+
+  const startFormatted = (() => {
+    try { return format(new Date(period.startDate), 'MMMM d, yyyy'); } catch { return period.startDate; }
+  })();
+  const endFormatted = (() => {
+    try { return format(new Date(period.endDate), 'MMMM d, yyyy'); } catch { return period.endDate; }
+  })();
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-primary" />
+            Send Enrollment Notices
+          </DialogTitle>
+          <DialogDescription>
+            Notify all active employees at a company that the enrollment window is open and prompt them to log in and review their plans.
+          </DialogDescription>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-emerald-800">
+                <CheckCircle2 className="h-5 w-5" />
+                Notices Sent Successfully
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <div className="text-center rounded-md bg-white border p-3">
+                  <p className="text-2xl font-bold text-emerald-700">{result.sent}</p>
+                  <p className="text-xs text-muted-foreground">Notices Sent</p>
+                </div>
+                <div className="text-center rounded-md bg-white border p-3">
+                  <p className="text-2xl font-bold text-primary">{result.emailsDelivered ? "✓" : "~"}</p>
+                  <p className="text-xs text-muted-foreground">{result.emailsDelivered ? "Emails Delivered" : "Simulated"}</p>
+                </div>
+              </div>
+              <p className="text-sm text-emerald-700 mt-2">
+                <strong>{result.employerName}</strong> — {result.periodName}
+              </p>
+              {!result.emailsDelivered && (
+                <p className="text-xs text-muted-foreground border-t pt-2">
+                  Emails were not delivered because SMTP is not configured. Employee invitation statuses have been updated. Add SMTP credentials (SMTP_HOST, SMTP_USER, SMTP_PASS) to enable real email delivery.
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={handleClose}>Close</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label>Select Employer *</Label>
+              {empLoading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Select value={employerId} onValueChange={setEmployerId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose an employer…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employers?.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {e.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {selectedEmployer && (
+              <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
+                <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  Email Preview — {selectedEmployer.name}
+                </p>
+                <div className="rounded-md border bg-white overflow-hidden text-xs">
+                  <div className="bg-[#5E0E20] text-white px-4 py-3">
+                    <p className="font-bold text-sm">BenePortal</p>
+                    <p className="opacity-75 text-xs">Benefits Enrollment Platform</p>
+                  </div>
+                  <div className="px-4 py-3 space-y-2 text-muted-foreground">
+                    <p className="font-semibold text-foreground text-sm">Time to Review Your Benefits</p>
+                    <p>Dear [Employee Name],</p>
+                    <p>
+                      <strong>{selectedEmployer.name}</strong> has opened the <strong>{period.name}</strong> enrollment window.
+                    </p>
+                    <div className="bg-[#FAE0DC] border-l-2 border-[#9E1E34] rounded px-3 py-2">
+                      <p className="font-semibold text-[#5E0E20] text-xs">Enrollment Window</p>
+                      <p className="font-bold text-[#5E0E20]">{startFormatted} – {endFormatted}</p>
+                    </div>
+                    <p className="text-xs">Employees can enroll, change plans, add dependents, or review plan documents during this window.</p>
+                    <div className="text-center py-1">
+                      <span className="inline-block bg-[#9E1E34] text-white text-xs font-semibold px-4 py-2 rounded">
+                        Access Your Benefits Portal →
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <Alert className="py-2 border-amber-200 bg-amber-50 text-amber-800">
+                  <Info className="h-3 w-3" />
+                  <AlertDescription className="text-xs">
+                    All active employees at {selectedEmployer.name} will receive this notice and have their invitation status updated. Employees logging in for the first time will be prompted to set up their account password.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose}>Cancel</Button>
+              <Button
+                onClick={handleSend}
+                disabled={!employerId || sendNotices.isPending}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+                {sendNotices.isPending ? "Sending…" : "Send Notices"}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AddPeriodDialog() {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("open");
@@ -234,7 +419,6 @@ function AddPeriodDialog() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Convert local dates to ISO strings (appending time)
     const startDateRaw = formData.get("startDate") as string;
     const endDateRaw = formData.get("endDate") as string;
     const startIso = new Date(`${startDateRaw}T00:00:00`).toISOString();

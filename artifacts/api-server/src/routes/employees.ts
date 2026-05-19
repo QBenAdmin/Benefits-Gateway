@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { employeesTable, activityLogTable } from "@workspace/db";
+import { employeesTable, activityLogTable, employersTable } from "@workspace/db";
 import { eq, ilike, or, and } from "drizzle-orm";
 import {
   CreateEmployeeBody,
@@ -12,6 +12,7 @@ import {
   SendBulkInvitationsBody,
   ImportEmployeesCsvBody,
 } from "@workspace/api-zod";
+import { sendInvitationEmail } from "../lib/mailer";
 
 const router = Router();
 
@@ -61,7 +62,11 @@ router.post("/employees", async (req, res) => {
     return;
   }
 
-  const [employee] = await db.insert(employeesTable).values(parsed.data).returning();
+  const { annualSalary, ...rest } = parsed.data;
+  const [employee] = await db.insert(employeesTable).values({
+    ...rest,
+    annualSalary: annualSalary != null ? String(annualSalary) : undefined,
+  }).returning();
 
   await db.insert(activityLogTable).values({
     type: "employee_added",
@@ -174,9 +179,13 @@ router.patch("/employees/:id", async (req, res) => {
     return;
   }
 
+  const { annualSalary: updatedSalary, ...restBody } = parsedBody.data;
   const [employee] = await db
     .update(employeesTable)
-    .set(parsedBody.data)
+    .set({
+      ...restBody,
+      annualSalary: updatedSalary != null ? String(updatedSalary) : undefined,
+    })
     .where(eq(employeesTable.id, parsedParams.data.id))
     .returning();
 
@@ -217,6 +226,17 @@ router.post("/employees/:id/invite", async (req, res) => {
     return;
   }
 
+  const employer = employee.employerId
+    ? (await db.select().from(employersTable).where(eq(employersTable.id, employee.employerId)))[0]
+    : null;
+
+  const { delivered, simulated } = await sendInvitationEmail({
+    to: employee.email,
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    employerName: employer?.name ?? "Your Employer",
+  });
+
   await db
     .update(employeesTable)
     .set({ invitationStatus: "invited", invitationSentAt: new Date() })
@@ -231,8 +251,10 @@ router.post("/employees/:id/invite", async (req, res) => {
 
   res.json({
     success: true,
-    message: "Invitation sent successfully",
+    message: simulated ? "Invitation recorded (email delivery requires SMTP configuration)" : "Invitation sent successfully",
     sentTo: employee.email,
+    emailDelivered: delivered,
+    emailSimulated: simulated,
   });
 });
 
@@ -248,10 +270,28 @@ router.post("/invitations/bulk", async (req, res) => {
   let failed = 0;
   const errors: string[] = [];
 
+  const employerCache = new Map<number, string>();
+
   for (const empId of employeeIds) {
     try {
       const [emp] = await db.select().from(employeesTable).where(eq(employeesTable.id, empId));
       if (emp) {
+        let employerName = "Your Employer";
+        if (emp.employerId) {
+          if (!employerCache.has(emp.employerId)) {
+            const [er] = await db.select().from(employersTable).where(eq(employersTable.id, emp.employerId));
+            employerCache.set(emp.employerId, er?.name ?? "Your Employer");
+          }
+          employerName = employerCache.get(emp.employerId)!;
+        }
+
+        await sendInvitationEmail({
+          to: emp.email,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          employerName,
+        });
+
         await db
           .update(employeesTable)
           .set({ invitationStatus: "invited", invitationSentAt: new Date() })

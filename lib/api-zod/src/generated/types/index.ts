@@ -62,6 +62,8 @@ export * from './listEnrollmentsParams';
 export * from './listNotificationsParams';
 export * from './notification';
 export * from './planEnrollmentCount';
+export * from './sendNoticesInput';
+export * from './sendNoticesResult';
 export * from './transmitInput';
 export * from './transmitResult';
 export * from './unreadCount';

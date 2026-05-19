@@ -1164,6 +1164,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/EnrollmentPeriodStatus"
 
+  /enrollment-periods/{id}/send-notices:
+    post:
+      operationId: sendEnrollmentNotices
+      tags: [enrollment-periods]
+      summary: Send enrollment notices to all active employees
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendNoticesInput"
+      responses:
+        "200":
+          description: Notices sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendNoticesResult"
+
   # Enrollment Changes (approval workflow)
   /enrollment-changes:
     get:
@@ -1589,10 +1614,44 @@ components:
           type: string
         sentTo:
           type: string
+        emailDelivered:
+          type: boolean
+        emailSimulated:
+          type: boolean
       required:
         - success
         - message
         - sentTo
+
+    SendNoticesInput:
+      type: object
+      properties:
+        employerId:
+          type: integer
+      required:
+        - employerId
+
+    SendNoticesResult:
+      type: object
+      properties:
+        sent:
+          type: integer
+        failed:
+          type: integer
+        emailsDelivered:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+        periodName:
+          type: string
+        employerName:
+          type: string
+      required:
+        - sent
+        - failed
+        - emailsDelivered
 
     BulkInvitationInput:
       type: object
