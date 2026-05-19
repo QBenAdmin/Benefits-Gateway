@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { seedDatabase } from "./lib/seed";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,16 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  seedDatabase()
+    .then((result) => {
+      if (result.seeded) {
+        logger.info(result, "Seed complete");
+      } else {
+        logger.info({ reason: result.reason }, "Seed skipped");
+      }
+    })
+    .catch((seedErr) => {
+      logger.error({ err: seedErr }, "Startup seed failed");
+    });
 });
