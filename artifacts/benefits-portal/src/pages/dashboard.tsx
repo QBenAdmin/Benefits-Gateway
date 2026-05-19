@@ -40,9 +40,9 @@ export default function Dashboard() {
             {loadingSummary ? <Skeleton className="h-8 w-20" /> : (
               <div className="text-2xl font-bold">{summary?.enrolledEmployees || 0}</div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground mt-1">
               {loadingSummary ? <Skeleton className="h-3 w-16" /> : `${summary?.enrollmentCompletionRate || 0}% completion`}
-            </p>
+            </div>
           </CardContent>
         </Card>
         <Card>
