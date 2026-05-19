@@ -14,5 +14,13 @@ export interface EnrollmentPeriodInput {
   endDate: string;
   allowEmployeeChanges?: boolean;
   requireApprovalOutsidePeriod?: boolean;
+  /** Who is eligible: full_time_only | full_and_part_time | all_employees */
+  eligibilityClass?: string;
+  /** immediate | 30_days | 60_days | 90_days | first_of_next_month */
+  waitingPeriod?: string;
+  /** Days new hires have to enroll */
+  newHireWindow?: number;
+  /** Days employees have to enroll after a qualifying life event */
+  lifeEventWindow?: number;
   notes?: string;
 }

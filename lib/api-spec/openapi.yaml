@@ -1991,6 +1991,8 @@ components:
       properties:
         id:
           type: integer
+        employerId:
+          type: ["integer", "null"]
         name:
           type: string
         type:
@@ -2025,6 +2027,8 @@ components:
     DocumentInput:
       type: object
       properties:
+        employerId:
+          type: integer
         name:
           type: string
         type:
@@ -2454,6 +2458,18 @@ components:
           type: boolean
         requireApprovalOutsidePeriod:
           type: boolean
+        eligibilityClass:
+          type: string
+          description: "Who is eligible: full_time_only | full_and_part_time | all_employees"
+        waitingPeriod:
+          type: string
+          description: "immediate | 30_days | 60_days | 90_days | first_of_next_month"
+        newHireWindow:
+          type: integer
+          description: Days new hires have to enroll
+        lifeEventWindow:
+          type: integer
+          description: Days employees have to enroll after a qualifying life event
         notes:
           type: string
       required:

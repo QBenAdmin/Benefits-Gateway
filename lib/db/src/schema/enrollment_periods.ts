@@ -13,6 +13,10 @@ export const enrollmentPeriodsTable = pgTable("enrollment_periods", {
   isActive: boolean("is_active").notNull().default(true),
   allowEmployeeChanges: boolean("allow_employee_changes").notNull().default(true),
   requireApprovalOutsidePeriod: boolean("require_approval_outside_period").notNull().default(true),
+  eligibilityClass: text("eligibility_class").default("full_time_only"),
+  waitingPeriod: text("waiting_period").default("first_of_next_month"),
+  newHireWindow: integer("new_hire_window").default(30),
+  lifeEventWindow: integer("life_event_window").default(30),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

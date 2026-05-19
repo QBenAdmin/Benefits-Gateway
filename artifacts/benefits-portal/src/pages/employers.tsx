@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { 
   useListEmployers, 
   useCreateEmployer, 
@@ -22,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Employers() {
   const [search, setSearch] = useState("");
+  const [, navigate] = useLocation();
   const { data: employers, isLoading } = useListEmployers({ query: { queryKey: getListEmployersQueryKey() } });
   
   const filteredEmployers = employers?.filter(emp => 
@@ -37,6 +39,12 @@ export default function Employers() {
           <p className="text-muted-foreground">Manage participating companies and upload census data.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            onClick={() => navigate("/employer-setup")}
+            className="gap-2 bg-[#9E1E34] hover:bg-[#5E0E20] text-white"
+          >
+            <Plus className="h-4 w-4" /> Set Up New Employer
+          </Button>
           <AddEmployerDialog />
         </div>
       </div>

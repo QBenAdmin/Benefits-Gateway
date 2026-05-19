@@ -7,6 +7,7 @@
  */
 
 export interface DocumentInput {
+  employerId?: number;
   name: string;
   type: string;
   carrierId?: number;

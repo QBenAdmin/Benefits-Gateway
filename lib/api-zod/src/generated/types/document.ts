@@ -8,6 +8,8 @@
 
 export interface Document {
   id: number;
+  /** @nullable */
+  employerId?: number | null;
   name: string;
   type: string;
   /** @nullable */

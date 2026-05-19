@@ -19,6 +19,7 @@ import DependentsPage from "@/pages/dependents";
 import EnrollmentPeriods from "@/pages/enrollment-periods";
 import Approvals from "@/pages/approvals";
 import NotificationsPage from "@/pages/notifications";
+import EmployerSetup from "@/pages/employer-setup";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/enrollment-periods" component={EnrollmentPeriods} />
         <Route path="/approvals" component={Approvals} />
         <Route path="/notifications" component={NotificationsPage} />
+        <Route path="/employer-setup" component={EmployerSetup} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>

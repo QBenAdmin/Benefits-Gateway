@@ -685,6 +685,7 @@ export const ListDocumentsQueryParams = zod.object({
 
 export const ListDocumentsResponseItem = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number().nullish(),
@@ -704,6 +705,7 @@ export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
  * @summary Create/upload a document record
  */
 export const CreateDocumentBody = zod.object({
+  "employerId": zod.number().optional(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number().optional(),
@@ -723,6 +725,7 @@ export const GetDocumentParams = zod.object({
 
 export const GetDocumentResponse = zod.object({
   "id": zod.number(),
+  "employerId": zod.number().nullish(),
   "name": zod.string(),
   "type": zod.string(),
   "carrierId": zod.number().nullish(),
@@ -1232,6 +1235,10 @@ export const CreateEnrollmentPeriodBody = zod.object({
   "endDate": zod.string(),
   "allowEmployeeChanges": zod.boolean().optional(),
   "requireApprovalOutsidePeriod": zod.boolean().optional(),
+  "eligibilityClass": zod.string().optional().describe('Who is eligible: full_time_only | full_and_part_time | all_employees'),
+  "waitingPeriod": zod.string().optional().describe('immediate | 30_days | 60_days | 90_days | first_of_next_month'),
+  "newHireWindow": zod.number().optional().describe('Days new hires have to enroll'),
+  "lifeEventWindow": zod.number().optional().describe('Days employees have to enroll after a qualifying life event'),
   "notes": zod.string().optional()
 })
 
