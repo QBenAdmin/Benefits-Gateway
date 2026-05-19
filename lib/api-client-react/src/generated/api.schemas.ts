@@ -69,6 +69,11 @@ export interface Employee {
   state?: string | null;
   /** @nullable */
   zip?: string | null;
+  /**
+     * Annual salary in USD (stored as numeric string)
+     * @nullable
+     */
+  annualSalary?: string | null;
   createdAt: string;
 }
 
@@ -88,6 +93,8 @@ export interface EmployeeInput {
   city?: string;
   state?: string;
   zip?: string;
+  /** Annual salary in USD */
+  annualSalary?: number;
 }
 
 export interface EmployeeUpdate {
@@ -106,6 +113,8 @@ export interface EmployeeUpdate {
   city?: string;
   state?: string;
   zip?: string;
+  /** Annual salary in USD */
+  annualSalary?: number;
 }
 
 export type CsvImportInputMappings = { [key: string]: unknown };

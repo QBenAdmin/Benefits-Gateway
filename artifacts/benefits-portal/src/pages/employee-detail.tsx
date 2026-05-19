@@ -15,7 +15,7 @@ import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Mail, Briefcase, Calendar, MapPin, Phone, Plus, AlertCircle, Trash, Heart, Building2, Shield } from "lucide-react";
+import { User, Mail, Briefcase, Calendar, MapPin, Phone, Plus, AlertCircle, Trash, Heart, Building2, Shield, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -119,6 +119,15 @@ export default function EmployeeDetail() {
               <User className="h-4 w-4 text-muted-foreground" />
               <span>ID: {employee.employeeId || "N/A"}</span>
             </div>
+            <div className="flex items-center gap-3 text-sm">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <span>
+                Annual Salary:{" "}
+                {employee.annualSalary
+                  ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(employee.annualSalary))
+                  : "Not provided"}
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -182,7 +191,12 @@ export default function EmployeeDetail() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Dependents</CardTitle>
+          <div>
+            <CardTitle>Dependents</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Listed dependents are eligible for health, dental, and vision coverage — enrollment is optional.
+            </p>
+          </div>
           <AddDependentDialog empId={empId} />
         </CardHeader>
         <CardContent>
@@ -192,16 +206,17 @@ export default function EmployeeDetail() {
                 <TableHead>Name</TableHead>
                 <TableHead>Relationship</TableHead>
                 <TableHead>DOB / Age</TableHead>
+                <TableHead>Health Coverage</TableHead>
                 <TableHead>Alerts</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {depLoading ? (
-                <TableRow><TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
               ) : !dependents || dependents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                     No dependents registered.
                   </TableCell>
                 </TableRow>
@@ -214,9 +229,15 @@ export default function EmployeeDetail() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span>{format(new Date(dep.dateOfBirth), 'MMM d, yyyy')}</span>
+                        <span>{dep.dateOfBirth ? format(new Date(dep.dateOfBirth), 'MMM d, yyyy') : "Unknown"}</span>
                         <span className="text-xs text-muted-foreground">{dep.dateOfBirth ? new Date().getFullYear() - new Date(dep.dateOfBirth).getFullYear() : "?"} years old</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-teal-700 border-teal-300 bg-teal-50 text-xs">
+                        <Heart className="h-3 w-3 mr-1" />
+                        Eligible
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {dep.daysUntilAgeOut != null && dep.daysUntilAgeOut <= 60 && dep.daysUntilAgeOut >= 0 ? (

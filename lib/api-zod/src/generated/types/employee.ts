@@ -39,5 +39,10 @@ export interface Employee {
   state?: string | null;
   /** @nullable */
   zip?: string | null;
+  /**
+     * Annual salary in USD (stored as numeric string)
+     * @nullable
+     */
+  annualSalary?: string | null;
   createdAt: string;
 }

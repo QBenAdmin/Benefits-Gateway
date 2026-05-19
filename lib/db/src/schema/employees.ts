@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { employersTable } from "./employers";
@@ -15,6 +15,7 @@ export const employeesTable = pgTable("employees", {
   department: text("department"),
   jobTitle: text("job_title"),
   employeeId: text("employee_id"),
+  annualSalary: numeric("annual_salary", { precision: 12, scale: 2 }),
   status: text("status").notNull().default("active"),
   invitationStatus: text("invitation_status").notNull().default("not_invited"),
   invitationSentAt: timestamp("invitation_sent_at"),

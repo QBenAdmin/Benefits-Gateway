@@ -85,6 +85,7 @@ export const ListEmployeesResponseItem = zod.object({
   "city": zod.string().nullish(),
   "state": zod.string().nullish(),
   "zip": zod.string().nullish(),
+  "annualSalary": zod.string().nullish().describe('Annual salary in USD (stored as numeric string)'),
   "createdAt": zod.string()
 })
 export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
@@ -108,7 +109,8 @@ export const CreateEmployeeBody = zod.object({
   "address": zod.string().optional(),
   "city": zod.string().optional(),
   "state": zod.string().optional(),
-  "zip": zod.string().optional()
+  "zip": zod.string().optional(),
+  "annualSalary": zod.number().optional().describe('Annual salary in USD')
 })
 
 
@@ -158,6 +160,7 @@ export const GetEmployeeResponse = zod.object({
   "city": zod.string().nullish(),
   "state": zod.string().nullish(),
   "zip": zod.string().nullish(),
+  "annualSalary": zod.string().nullish().describe('Annual salary in USD (stored as numeric string)'),
   "createdAt": zod.string()
 })
 
@@ -184,7 +187,8 @@ export const UpdateEmployeeBody = zod.object({
   "address": zod.string().optional(),
   "city": zod.string().optional(),
   "state": zod.string().optional(),
-  "zip": zod.string().optional()
+  "zip": zod.string().optional(),
+  "annualSalary": zod.number().optional().describe('Annual salary in USD')
 })
 
 export const UpdateEmployeeResponse = zod.object({
@@ -207,6 +211,7 @@ export const UpdateEmployeeResponse = zod.object({
   "city": zod.string().nullish(),
   "state": zod.string().nullish(),
   "zip": zod.string().nullish(),
+  "annualSalary": zod.string().nullish().describe('Annual salary in USD (stored as numeric string)'),
   "createdAt": zod.string()
 })
 

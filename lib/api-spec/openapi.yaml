@@ -1457,6 +1457,9 @@ components:
           type: ["string", "null"]
         zip:
           type: ["string", "null"]
+        annualSalary:
+          type: ["string", "null"]
+          description: Annual salary in USD (stored as numeric string)
         createdAt:
           type: string
       required:
@@ -1501,6 +1504,9 @@ components:
           type: string
         zip:
           type: string
+        annualSalary:
+          type: number
+          description: Annual salary in USD
       required:
         - firstName
         - lastName
@@ -1539,6 +1545,9 @@ components:
           type: string
         zip:
           type: string
+        annualSalary:
+          type: number
+          description: Annual salary in USD
 
     CsvImportInput:
       type: object

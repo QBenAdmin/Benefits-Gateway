@@ -22,4 +22,6 @@ export interface EmployeeInput {
   city?: string;
   state?: string;
   zip?: string;
+  /** Annual salary in USD */
+  annualSalary?: number;
 }
