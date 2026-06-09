@@ -14,7 +14,59 @@ import {
   CheckCircle2,
   FileText,
   Info,
+  Download,
 } from "lucide-react";
+
+// ─── SAMPLE CSV ───────────────────────────────────────────────────────────────
+// 35-row synthetic workforce dataset designed to surface realistic adverse
+// impact findings. Column names auto-map to all 11 standard compliance fields.
+const SAMPLE_CSV = `employee_id,gender,race,age,department,job_title,hire_date,termination_date,promotion_date,base_salary,final_decision
+E001,Male,White,34,Engineering,Software Engineer,2023-03-15,,,82000,Hired
+E002,Male,White,42,Engineering,Senior Engineer,2023-01-10,,2024-06-01,85000,Hired
+E003,Male,White,29,Engineering,Software Engineer,2023-06-01,,,79000,Hired
+E004,Male,White,45,Marketing,Marketing Manager,2022-11-01,,2024-01-15,91000,Hired
+E005,Male,Hispanic,38,Engineering,Software Engineer,2023-02-14,,,74000,Hired
+E006,Male,Hispanic,51,Operations,Operations Lead,,,,69000,Rejected
+E007,Male,Black,33,Engineering,Software Engineer,2023-04-01,,,71000,Hired
+E008,Male,Black,47,HR,HR Specialist,,,,66000,Rejected
+E009,Male,Asian,29,Engineering,Software Engineer,2023-05-01,,2024-09-01,80000,Hired
+E010,Male,Asian,36,Data,Data Analyst,2023-03-01,,,77000,Hired
+E011,Male,White,28,Engineering,Software Engineer,2023-07-01,,,81000,Hired
+E012,Male,Hispanic,43,Marketing,Marketing Specialist,,,,72000,Rejected
+E013,Male,Black,26,Engineering,Junior Engineer,2023-08-01,,,68000,Hired
+E014,Male,White,39,Operations,Operations Manager,2022-09-01,2024-03-15,,88000,Hired
+E015,Male,Hispanic,55,Engineering,Software Engineer,2023-01-15,,,76000,Hired
+E016,Male,White,31,Data,Data Analyst,2023-06-15,,,78000,Hired
+E017,Male,Black,44,HR,HR Manager,,,,62000,Rejected
+E018,Male,Asian,37,Engineering,Software Engineer,,,,75000,Rejected
+E019,Female,White,32,Engineering,Software Engineer,2023-04-01,,,75000,Hired
+E020,Female,White,41,Marketing,Marketing Manager,2023-02-01,,2024-08-01,83000,Hired
+E021,Female,White,27,Engineering,Software Engineer,,,,72000,Rejected
+E022,Female,Hispanic,35,Engineering,Software Engineer,2023-05-15,,,67000,Hired
+E023,Female,Hispanic,48,Operations,Operations Lead,,,,63000,Rejected
+E024,Female,Hispanic,30,Marketing,Marketing Specialist,,,,65000,Rejected
+E025,Female,Black,29,Engineering,Junior Engineer,2023-09-01,2024-06-30,,62000,Hired
+E026,Female,Black,52,HR,HR Specialist,,,,58000,Rejected
+E027,Female,Black,38,Engineering,Software Engineer,,,,64000,Rejected
+E028,Female,Asian,31,Engineering,Software Engineer,2023-07-01,,,73000,Hired
+E029,Female,White,44,Data,Data Analyst,,,,70000,Rejected
+E030,Female,Hispanic,26,Engineering,Software Engineer,,,,61000,Rejected
+E031,Female,Black,40,Operations,Operations Manager,,,,59000,Rejected
+E032,Female,White,36,Engineering,Software Engineer,2023-10-01,2024-11-15,,77000,Hired
+E033,Female,Asian,29,Data,Data Analyst,,,,69000,Rejected
+E034,Female,Hispanic,55,Engineering,Software Engineer,2023-03-01,,,63000,Hired
+E035,Female,Black,33,HR,HR Specialist,,,,60000,Rejected
+`;
+
+function downloadSampleCsv() {
+  const blob = new Blob([SAMPLE_CSV], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sample-workforce-eeoc-audit.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const CADENCES = [
   { value: "weekly", label: "Weekly" },
@@ -244,9 +296,27 @@ export default function NewAudit() {
         <div className="space-y-4">
           <Card className="border shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base">Upload Workforce CSV</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Upload Workforce CSV</CardTitle>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-xs"
+                  onClick={downloadSampleCsv}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download sample CSV
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-primary flex items-start gap-2">
+                <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  Need test data? Download the <strong>sample CSV</strong> above — 35 synthetic employees across 4 races and 2 genders with salaries and hiring decisions. Column names auto-map when uploaded.
+                </span>
+              </div>
               <div
                 className="rounded-lg border-2 border-dashed border-border p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
