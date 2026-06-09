@@ -7,6 +7,7 @@ import {
   auditErtResponsesTable,
   auditStatisticalResultsTable,
   auditCsvUploadsTable,
+  notificationsTable,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import {
@@ -17,6 +18,51 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
+
+// ─── AUDIT SCHEDULING HELPERS ────────────────────────────────────────────────
+
+const CADENCE_DAYS: Record<string, number> = {
+  weekly: 7,
+  monthly: 30,
+  quarterly: 90,
+  yearly: 365,
+  calendar_year: 365,
+  rolling_12: 365,
+};
+
+function computeNextDueDate(session: {
+  status: string;
+  cadence: string;
+  windowEnd: string | null;
+  createdAt: Date;
+}): string | null {
+  if (session.status !== "complete") return null;
+  const days = CADENCE_DAYS[session.cadence];
+  if (!days) return null;
+  const baseDate = session.windowEnd ? new Date(session.windowEnd) : new Date(session.createdAt);
+  const nextDue = new Date(baseDate);
+  nextDue.setDate(nextDue.getDate() + days);
+  return nextDue.toISOString().split("T")[0];
+}
+
+function computeScheduleStatus(nextDueDate: string | null): "on_track" | "due_soon" | "overdue" | null {
+  if (!nextDueDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(nextDueDate);
+  const daysUntilDue = Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysUntilDue < 0) return "overdue";
+  if (daysUntilDue <= 30) return "due_soon";
+  return "on_track";
+}
+
+function enrichSessionWithSchedule<T extends { status: string; cadence: string; windowEnd: string | null; createdAt: Date }>(
+  session: T
+): T & { nextDueDate: string | null; scheduleStatus: string | null } {
+  const nextDueDate = computeNextDueDate(session);
+  const scheduleStatus = computeScheduleStatus(nextDueDate);
+  return { ...session, nextDueDate, scheduleStatus };
+}
 
 // ─── REGULATORY FEED CACHE ────────────────────────────────────────────────────
 let feedCache: { data: unknown; expiresAt: number } | null = null;
@@ -576,17 +622,21 @@ function generateFindings(results: StatResult[]): Array<{ severity: string; cate
 
 // ─── ROUTES ──────────────────────────────────────────────────────────────────
 
-// GET /audit/sessions  (supports ?page=1&limit=50; returns pagination metadata)
+// GET /audit/sessions  (supports ?page=1&limit=50&scheduleStatus=; returns pagination metadata)
 router.get("/audit/sessions", async (req, res) => {
   const pageNum = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
   const limitNum = Math.min(200, Math.max(1, parseInt(String(req.query.limit ?? "50"), 10) || 50));
-  const offset = (pageNum - 1) * limitNum;
+  const scheduleStatusFilter = req.query.scheduleStatus as string | undefined;
 
-  const [sessions, allSessions] = await Promise.all([
-    db.select().from(auditSessionsTable).orderBy(auditSessionsTable.createdAt).limit(limitNum).offset(offset),
-    db.select({ id: auditSessionsTable.id }).from(auditSessionsTable),
-  ]);
-  const total = allSessions.length;
+  const allSessionsRaw = await db.select().from(auditSessionsTable).orderBy(auditSessionsTable.createdAt);
+  const allEnriched = allSessionsRaw.map(enrichSessionWithSchedule);
+
+  const filtered = scheduleStatusFilter
+    ? allEnriched.filter((s) => s.scheduleStatus === scheduleStatusFilter)
+    : allEnriched;
+
+  const total = filtered.length;
+  const sessions = filtered.slice((pageNum - 1) * limitNum, pageNum * limitNum);
   res.json({ sessions, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) });
 });
 
@@ -606,7 +656,7 @@ router.get("/audit/sessions/:id", async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const [session] = await db.select().from(auditSessionsTable).where(eq(auditSessionsTable.id, id));
   if (!session) { res.status(404).json({ error: "Not found" }); return; }
-  res.json(session);
+  res.json(enrichSessionWithSchedule(session));
 });
 
 // PATCH /audit/sessions/:id
@@ -815,12 +865,12 @@ router.get("/audit/regulatory-feed", async (_req, res) => {
 
 // GET /audit/dashboard
 router.get("/audit/dashboard", async (_req, res) => {
-  const sessions = await db.select().from(auditSessionsTable).orderBy(auditSessionsTable.createdAt);
+  const rawSessions = await db.select().from(auditSessionsTable).orderBy(auditSessionsTable.createdAt);
+  const sessions = rawSessions.map(enrichSessionWithSchedule);
 
   const totalAudits = sessions.length;
 
   // Count passing audits: sessions that are complete and have no failed statistical results
-  const sessionIds = sessions.map((s) => s.id);
   let passingAudits = 0;
   for (const session of sessions.filter((s) => s.status === "complete")) {
     const results = await db.select().from(auditStatisticalResultsTable).where(eq(auditStatisticalResultsTable.sessionId, session.id));
@@ -837,12 +887,36 @@ router.get("/audit/dashboard", async (_req, res) => {
 
   const recentSessions = sessions.slice(-5).reverse();
 
+  // Scheduling: due soon (within 30 days) and overdue
+  const dueSoonSessions = sessions.filter((s) => s.scheduleStatus === "due_soon");
+  const overdueSessions = sessions.filter((s) => s.scheduleStatus === "overdue");
+
+  // Create notifications for overdue audits that don't already have one
+  for (const session of overdueSessions) {
+    const existingNotif = await db.select({ id: notificationsTable.id })
+      .from(notificationsTable)
+      .where(eq(notificationsTable.actionUrl, `/compliance-audit/audits/${session.id}`));
+    if (existingNotif.length === 0) {
+      await db.insert(notificationsTable).values({
+        type: "audit_overdue",
+        title: "Audit Overdue",
+        message: `Audit "${session.name}" is overdue. Next audit was due ${session.nextDueDate ?? "recently"} (${session.cadence} cadence).`,
+        priority: "high",
+        status: "unread",
+        actionUrl: `/compliance-audit/audits/${session.id}`,
+        isRead: false,
+      });
+    }
+  }
+
   res.json({
     totalAudits,
     passingAudits,
     openAudits,
     lastAuditDate,
     recentSessions,
+    dueSoonSessions,
+    overdueSessions,
   });
 });
 

@@ -736,6 +736,10 @@ export interface AuditSession {
   /** @nullable */
   windowEnd?: string | null;
   status: string;
+  /** @nullable */
+  nextDueDate?: string | null;
+  /** @nullable */
+  scheduleStatus?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -890,6 +894,8 @@ export interface AuditDashboardStats {
   /** @nullable */
   lastAuditDate?: string | null;
   recentSessions: AuditSession[];
+  dueSoonSessions: AuditSession[];
+  overdueSessions: AuditSession[];
 }
 
 export type ListEmployeesParams = {
@@ -926,7 +932,17 @@ type?: string;
 export type ListAuditSessionsParams = {
 page?: number;
 limit?: number;
+scheduleStatus?: ListAuditSessionsScheduleStatus;
 };
+
+export type ListAuditSessionsScheduleStatus = typeof ListAuditSessionsScheduleStatus[keyof typeof ListAuditSessionsScheduleStatus];
+
+
+export const ListAuditSessionsScheduleStatus = {
+  on_track: 'on_track',
+  due_soon: 'due_soon',
+  overdue: 'overdue',
+} as const;
 
 export type ListAuditSessions200 = {
   sessions: AuditSession[];

@@ -5,8 +5,10 @@
  * Benefits Enrollment Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListAuditSessionsScheduleStatus } from './listAuditSessionsScheduleStatus';
 
 export type ListAuditSessionsParams = {
 page?: number;
 limit?: number;
+scheduleStatus?: ListAuditSessionsScheduleStatus;
 };

@@ -1519,7 +1519,8 @@ export const GetChatbotTopicsResponse = zod.array(GetChatbotTopicsResponseItem)
  */
 export const ListAuditSessionsQueryParams = zod.object({
   "page": zod.coerce.number().optional(),
-  "limit": zod.coerce.number().optional()
+  "limit": zod.coerce.number().optional(),
+  "scheduleStatus": zod.enum(['on_track', 'due_soon', 'overdue']).optional()
 })
 
 export const ListAuditSessionsResponse = zod.object({
@@ -1531,6 +1532,8 @@ export const ListAuditSessionsResponse = zod.object({
   "windowStart": zod.string().nullish(),
   "windowEnd": zod.string().nullish(),
   "status": zod.string(),
+  "nextDueDate": zod.string().nullish(),
+  "scheduleStatus": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })),
@@ -1569,6 +1572,8 @@ export const GetAuditSessionResponse = zod.object({
   "windowStart": zod.string().nullish(),
   "windowEnd": zod.string().nullish(),
   "status": zod.string(),
+  "nextDueDate": zod.string().nullish(),
+  "scheduleStatus": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -1598,6 +1603,8 @@ export const UpdateAuditSessionResponse = zod.object({
   "windowStart": zod.string().nullish(),
   "windowEnd": zod.string().nullish(),
   "status": zod.string(),
+  "nextDueDate": zod.string().nullish(),
+  "scheduleStatus": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -1811,6 +1818,34 @@ export const GetAuditDashboardResponse = zod.object({
   "windowStart": zod.string().nullish(),
   "windowEnd": zod.string().nullish(),
   "status": zod.string(),
+  "nextDueDate": zod.string().nullish(),
+  "scheduleStatus": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "dueSoonSessions": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "vendorSystem": zod.string().nullish(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().nullish(),
+  "windowEnd": zod.string().nullish(),
+  "status": zod.string(),
+  "nextDueDate": zod.string().nullish(),
+  "scheduleStatus": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "overdueSessions": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "vendorSystem": zod.string().nullish(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().nullish(),
+  "windowEnd": zod.string().nullish(),
+  "status": zod.string(),
+  "nextDueDate": zod.string().nullish(),
+  "scheduleStatus": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 }))

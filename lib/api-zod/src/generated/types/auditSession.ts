@@ -17,6 +17,10 @@ export interface AuditSession {
   /** @nullable */
   windowEnd?: string | null;
   status: string;
+  /** @nullable */
+  nextDueDate?: string | null;
+  /** @nullable */
+  scheduleStatus?: string | null;
   createdAt: string;
   updatedAt: string;
 }

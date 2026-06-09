@@ -14,4 +14,6 @@ export interface AuditDashboardStats {
   /** @nullable */
   lastAuditDate?: string | null;
   recentSessions: AuditSession[];
+  dueSoonSessions: AuditSession[];
+  overdueSessions: AuditSession[];
 }

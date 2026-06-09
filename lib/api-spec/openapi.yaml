@@ -1382,6 +1382,11 @@ paths:
           in: query
           schema:
             type: integer
+        - name: scheduleStatus
+          in: query
+          schema:
+            type: string
+            enum: [on_track, due_soon, overdue]
       responses:
         "200":
           description: Paginated list of audit sessions
@@ -2971,6 +2976,10 @@ components:
           type: ["string", "null"]
         status:
           type: string
+        nextDueDate:
+          type: ["string", "null"]
+        scheduleStatus:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -3270,8 +3279,18 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AuditSession"
+        dueSoonSessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditSession"
+        overdueSessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditSession"
       required:
         - totalAudits
         - passingAudits
         - openAudits
         - recentSessions
+        - dueSoonSessions
+        - overdueSessions

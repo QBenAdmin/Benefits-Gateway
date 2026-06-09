@@ -70,6 +70,7 @@ export * from './integrationUpdate';
 export * from './invitationResult';
 export * from './listAuditSessions200';
 export * from './listAuditSessionsParams';
+export * from './listAuditSessionsScheduleStatus';
 export * from './listBenefitPlansParams';
 export * from './listDocumentsParams';
 export * from './listEmployeesParams';

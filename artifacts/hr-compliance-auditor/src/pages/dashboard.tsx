@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   TrendingUp,
   Newspaper,
+  Bell,
+  TimerOff,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -31,12 +33,31 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function ScheduleBadge({ scheduleStatus }: { scheduleStatus?: string | null }) {
+  if (!scheduleStatus) return null;
+  const config: Record<string, { label: string; className: string }> = {
+    on_track: { label: "On Track", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+    due_soon: { label: "Due Soon", className: "bg-amber-100 text-amber-700 border-amber-200" },
+    overdue: { label: "Overdue", className: "bg-red-100 text-red-700 border-red-200" },
+  };
+  const c = config[scheduleStatus] ?? { label: scheduleStatus, className: "bg-gray-100 text-gray-700 border-gray-200" };
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${c.className}`}>
+      {c.label}
+    </span>
+  );
+}
+
 export default function Dashboard() {
   const { data: dashboard, isLoading: dashLoading } = useGetAuditDashboard();
   const { data: sessionData } = useListAuditSessions();
   const { data: feed, isLoading: feedLoading } = useGetAuditRegulatoryFeed();
 
   const recentSessions = (sessionData?.sessions ?? []).slice(-5).reverse();
+
+  const dueSoonSessions = dashboard?.dueSoonSessions ?? [];
+  const overdueSessions = dashboard?.overdueSessions ?? [];
+  const hasAlerts = dueSoonSessions.length > 0 || overdueSessions.length > 0;
 
   const kpis = [
     {
@@ -129,6 +150,68 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Due Soon / Overdue Alerts */}
+      {dashLoading ? (
+        <Skeleton className="h-28 w-full" />
+      ) : hasAlerts ? (
+        <Card className="border border-amber-200 bg-amber-50/50 shadow-sm">
+          <CardHeader className="pb-3 pt-4 px-5">
+            <CardTitle className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Upcoming &amp; Overdue Audits
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 pb-4 space-y-3">
+            {overdueSessions.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <TimerOff className="h-3.5 w-3.5" />
+                  Overdue ({overdueSessions.length})
+                </p>
+                <div className="space-y-1.5">
+                  {overdueSessions.map((session) => (
+                    <Link key={session.id} href={`/audits/${session.id}`}>
+                      <div className="flex items-center justify-between rounded-md bg-red-50 border border-red-100 px-3 py-2 hover:bg-red-100/70 transition-colors cursor-pointer">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-red-800 truncate">{session.name}</p>
+                          <p className="text-xs text-red-600 mt-0.5">
+                            Was due {session.nextDueDate ? format(parseISO(session.nextDueDate), "MMM d, yyyy") : "—"} · {session.cadence}
+                          </p>
+                        </div>
+                        <ScheduleBadge scheduleStatus="overdue" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {dueSoonSessions.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Due Soon ({dueSoonSessions.length})
+                </p>
+                <div className="space-y-1.5">
+                  {dueSoonSessions.map((session) => (
+                    <Link key={session.id} href={`/audits/${session.id}`}>
+                      <div className="flex items-center justify-between rounded-md bg-amber-50 border border-amber-100 px-3 py-2 hover:bg-amber-100/70 transition-colors cursor-pointer">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-amber-800 truncate">{session.name}</p>
+                          <p className="text-xs text-amber-600 mt-0.5">
+                            Due {session.nextDueDate ? format(parseISO(session.nextDueDate), "MMM d, yyyy") : "—"} · {session.cadence}
+                          </p>
+                        </div>
+                        <ScheduleBadge scheduleStatus="due_soon" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Recent Audits */}
         <div className="lg:col-span-3 space-y-4">
@@ -166,9 +249,15 @@ export default function Dashboard() {
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {session.vendorSystem ?? "No vendor specified"} · {session.cadence}
+                          {session.nextDueDate && (
+                            <span className="ml-1">· Next due {format(parseISO(session.nextDueDate), "MMM d, yyyy")}</span>
+                          )}
                         </p>
                       </div>
-                      <div className="ml-4 flex-shrink-0">
+                      <div className="ml-4 flex-shrink-0 flex items-center gap-2">
+                        {session.scheduleStatus && (
+                          <ScheduleBadge scheduleStatus={session.scheduleStatus} />
+                        )}
                         <StatusBadge status={session.status} />
                       </div>
                     </div>
