@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "J33ssIouBAm3JuVuZfF5i"
+uri = "file://PROJECT_BRIEF.md"
+type = "text"
+title = "Benefits-Gateway Project Brief"
