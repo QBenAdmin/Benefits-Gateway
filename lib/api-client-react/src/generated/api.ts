@@ -25,6 +25,14 @@ import type {
   AdminUserInput,
   AdminUserUpdate,
   AgingOutDependent,
+  AuditAnalysisResult,
+  AuditCsvUploadInput,
+  AuditDashboardStats,
+  AuditErtInput,
+  AuditErtResult,
+  AuditSession,
+  AuditSessionInput,
+  AuditSessionUpdate,
   BenefitPlan,
   BenefitPlanInput,
   BenefitPlanUpdate,
@@ -67,6 +75,8 @@ import type {
   IntegrationInput,
   IntegrationUpdate,
   InvitationResult,
+  ListAuditSessions200,
+  ListAuditSessionsParams,
   ListBenefitPlansParams,
   ListDocumentsParams,
   ListEmployeesParams,
@@ -75,6 +85,7 @@ import type {
   ListNotificationsParams,
   Notification,
   PlanEnrollmentCount,
+  RegulatoryFeedResult,
   SendNoticesInput,
   SendNoticesResult,
   TransmitInput,
@@ -5264,6 +5275,832 @@ export function useGetChatbotTopics<TData = Awaited<ReturnType<typeof getChatbot
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetChatbotTopicsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListAuditSessionsUrl = (params?: ListAuditSessionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/audit/sessions?${stringifiedParams}` : `/api/audit/sessions`
+}
+
+/**
+ * @summary List audit sessions
+ */
+export const listAuditSessions = async (params?: ListAuditSessionsParams, options?: RequestInit): Promise<ListAuditSessions200> => {
+
+  return customFetch<ListAuditSessions200>(getListAuditSessionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAuditSessionsQueryKey = (params?: ListAuditSessionsParams,) => {
+    return [
+    `/api/audit/sessions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAuditSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listAuditSessions>>, TError = ErrorType<unknown>>(params?: ListAuditSessionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAuditSessionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditSessions>>> = ({ signal }) => listAuditSessions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuditSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAuditSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditSessions>>>
+export type ListAuditSessionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List audit sessions
+ */
+
+export function useListAuditSessions<TData = Awaited<ReturnType<typeof listAuditSessions>>, TError = ErrorType<unknown>>(
+ params?: ListAuditSessionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAuditSessionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateAuditSessionUrl = () => {
+
+
+
+
+  return `/api/audit/sessions`
+}
+
+/**
+ * @summary Create a new audit session
+ */
+export const createAuditSession = async (auditSessionInput: AuditSessionInput, options?: RequestInit): Promise<AuditSession> => {
+
+  return customFetch<AuditSession>(getCreateAuditSessionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      auditSessionInput,)
+  }
+);}
+
+
+
+
+export const getCreateAuditSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAuditSession>>, TError,{data: BodyType<AuditSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAuditSession>>, TError,{data: BodyType<AuditSessionInput>}, TContext> => {
+
+const mutationKey = ['createAuditSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAuditSession>>, {data: BodyType<AuditSessionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAuditSession(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAuditSessionMutationResult = NonNullable<Awaited<ReturnType<typeof createAuditSession>>>
+    export type CreateAuditSessionMutationBody = BodyType<AuditSessionInput>
+    export type CreateAuditSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new audit session
+ */
+export const useCreateAuditSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAuditSession>>, TError,{data: BodyType<AuditSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAuditSession>>,
+        TError,
+        {data: BodyType<AuditSessionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAuditSessionMutationOptions(options));
+    }
+
+export const getGetAuditSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}`
+}
+
+/**
+ * @summary Get audit session by ID
+ */
+export const getAuditSession = async (id: number, options?: RequestInit): Promise<AuditSession> => {
+
+  return customFetch<AuditSession>(getGetAuditSessionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditSessionQueryKey = (id: number,) => {
+    return [
+    `/api/audit/sessions/${id}`
+    ] as const;
+    }
+
+
+export const getGetAuditSessionQueryOptions = <TData = Awaited<ReturnType<typeof getAuditSession>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditSessionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditSession>>> = ({ signal }) => getAuditSession(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditSession>>>
+export type GetAuditSessionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get audit session by ID
+ */
+
+export function useGetAuditSession<TData = Awaited<ReturnType<typeof getAuditSession>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditSessionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateAuditSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}`
+}
+
+/**
+ * @summary Update an audit session
+ */
+export const updateAuditSession = async (id: number,
+    auditSessionUpdate: AuditSessionUpdate, options?: RequestInit): Promise<AuditSession> => {
+
+  return customFetch<AuditSession>(getUpdateAuditSessionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      auditSessionUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateAuditSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAuditSession>>, TError,{id: number;data: BodyType<AuditSessionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAuditSession>>, TError,{id: number;data: BodyType<AuditSessionUpdate>}, TContext> => {
+
+const mutationKey = ['updateAuditSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAuditSession>>, {id: number;data: BodyType<AuditSessionUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAuditSession(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAuditSessionMutationResult = NonNullable<Awaited<ReturnType<typeof updateAuditSession>>>
+    export type UpdateAuditSessionMutationBody = BodyType<AuditSessionUpdate>
+    export type UpdateAuditSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update an audit session
+ */
+export const useUpdateAuditSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAuditSession>>, TError,{id: number;data: BodyType<AuditSessionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAuditSession>>,
+        TError,
+        {id: number;data: BodyType<AuditSessionUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAuditSessionMutationOptions(options));
+    }
+
+export const getDeleteAuditSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}`
+}
+
+/**
+ * @summary Delete audit session
+ */
+export const deleteAuditSession = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAuditSessionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAuditSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAuditSession>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAuditSession>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAuditSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAuditSession>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAuditSession(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAuditSessionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAuditSession>>>
+
+    export type DeleteAuditSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete audit session
+ */
+export const useDeleteAuditSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAuditSession>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAuditSession>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAuditSessionMutationOptions(options));
+    }
+
+export const getGetAuditErtUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}/ert`
+}
+
+/**
+ * @summary Get ERT checklist responses and pillar scores for a session
+ */
+export const getAuditErt = async (id: number, options?: RequestInit): Promise<AuditErtResult> => {
+
+  return customFetch<AuditErtResult>(getGetAuditErtUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditErtQueryKey = (id: number,) => {
+    return [
+    `/api/audit/sessions/${id}/ert`
+    ] as const;
+    }
+
+
+export const getGetAuditErtQueryOptions = <TData = Awaited<ReturnType<typeof getAuditErt>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditErt>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditErtQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditErt>>> = ({ signal }) => getAuditErt(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditErt>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditErtQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditErt>>>
+export type GetAuditErtQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get ERT checklist responses and pillar scores for a session
+ */
+
+export function useGetAuditErt<TData = Awaited<ReturnType<typeof getAuditErt>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditErt>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditErtQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSubmitAuditErtUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}/ert`
+}
+
+/**
+ * @summary Submit or update ERT checklist responses for a session
+ */
+export const submitAuditErt = async (id: number,
+    auditErtInput: AuditErtInput, options?: RequestInit): Promise<AuditErtResult> => {
+
+  return customFetch<AuditErtResult>(getSubmitAuditErtUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      auditErtInput,)
+  }
+);}
+
+
+
+
+export const getSubmitAuditErtMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitAuditErt>>, TError,{id: number;data: BodyType<AuditErtInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitAuditErt>>, TError,{id: number;data: BodyType<AuditErtInput>}, TContext> => {
+
+const mutationKey = ['submitAuditErt'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitAuditErt>>, {id: number;data: BodyType<AuditErtInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  submitAuditErt(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitAuditErtMutationResult = NonNullable<Awaited<ReturnType<typeof submitAuditErt>>>
+    export type SubmitAuditErtMutationBody = BodyType<AuditErtInput>
+    export type SubmitAuditErtMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit or update ERT checklist responses for a session
+ */
+export const useSubmitAuditErt = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitAuditErt>>, TError,{id: number;data: BodyType<AuditErtInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitAuditErt>>,
+        TError,
+        {id: number;data: BodyType<AuditErtInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitAuditErtMutationOptions(options));
+    }
+
+export const getUploadAuditCsvUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}/csv`
+}
+
+/**
+ * @summary Upload workforce CSV and run statistical analysis
+ */
+export const uploadAuditCsv = async (id: number,
+    auditCsvUploadInput: AuditCsvUploadInput, options?: RequestInit): Promise<AuditAnalysisResult> => {
+
+  return customFetch<AuditAnalysisResult>(getUploadAuditCsvUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      auditCsvUploadInput,)
+  }
+);}
+
+
+
+
+export const getUploadAuditCsvMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadAuditCsv>>, TError,{id: number;data: BodyType<AuditCsvUploadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadAuditCsv>>, TError,{id: number;data: BodyType<AuditCsvUploadInput>}, TContext> => {
+
+const mutationKey = ['uploadAuditCsv'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadAuditCsv>>, {id: number;data: BodyType<AuditCsvUploadInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  uploadAuditCsv(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadAuditCsvMutationResult = NonNullable<Awaited<ReturnType<typeof uploadAuditCsv>>>
+    export type UploadAuditCsvMutationBody = BodyType<AuditCsvUploadInput>
+    export type UploadAuditCsvMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upload workforce CSV and run statistical analysis
+ */
+export const useUploadAuditCsv = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadAuditCsv>>, TError,{id: number;data: BodyType<AuditCsvUploadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadAuditCsv>>,
+        TError,
+        {id: number;data: BodyType<AuditCsvUploadInput>},
+        TContext
+      > => {
+      return useMutation(getUploadAuditCsvMutationOptions(options));
+    }
+
+export const getGetAuditResultsUrl = (id: number,) => {
+
+
+
+
+  return `/api/audit/sessions/${id}/results`
+}
+
+/**
+ * @summary Get stored statistical analysis results for a session
+ */
+export const getAuditResults = async (id: number, options?: RequestInit): Promise<AuditAnalysisResult> => {
+
+  return customFetch<AuditAnalysisResult>(getGetAuditResultsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditResultsQueryKey = (id: number,) => {
+    return [
+    `/api/audit/sessions/${id}/results`
+    ] as const;
+    }
+
+
+export const getGetAuditResultsQueryOptions = <TData = Awaited<ReturnType<typeof getAuditResults>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditResults>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditResultsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditResults>>> = ({ signal }) => getAuditResults(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditResults>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditResultsQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditResults>>>
+export type GetAuditResultsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get stored statistical analysis results for a session
+ */
+
+export function useGetAuditResults<TData = Awaited<ReturnType<typeof getAuditResults>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditResults>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditResultsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAuditRegulatoryFeedUrl = () => {
+
+
+
+
+  return `/api/audit/regulatory-feed`
+}
+
+/**
+ * @summary Fetch latest EEOC and CA CRD regulatory news items
+ */
+export const getAuditRegulatoryFeed = async ( options?: RequestInit): Promise<RegulatoryFeedResult> => {
+
+  return customFetch<RegulatoryFeedResult>(getGetAuditRegulatoryFeedUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditRegulatoryFeedQueryKey = () => {
+    return [
+    `/api/audit/regulatory-feed`
+    ] as const;
+    }
+
+
+export const getGetAuditRegulatoryFeedQueryOptions = <TData = Awaited<ReturnType<typeof getAuditRegulatoryFeed>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditRegulatoryFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditRegulatoryFeedQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditRegulatoryFeed>>> = ({ signal }) => getAuditRegulatoryFeed({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditRegulatoryFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditRegulatoryFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditRegulatoryFeed>>>
+export type GetAuditRegulatoryFeedQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Fetch latest EEOC and CA CRD regulatory news items
+ */
+
+export function useGetAuditRegulatoryFeed<TData = Awaited<ReturnType<typeof getAuditRegulatoryFeed>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditRegulatoryFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditRegulatoryFeedQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAuditDashboardUrl = () => {
+
+
+
+
+  return `/api/audit/dashboard`
+}
+
+/**
+ * @summary Get audit dashboard summary stats
+ */
+export const getAuditDashboard = async ( options?: RequestInit): Promise<AuditDashboardStats> => {
+
+  return customFetch<AuditDashboardStats>(getGetAuditDashboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditDashboardQueryKey = () => {
+    return [
+    `/api/audit/dashboard`
+    ] as const;
+    }
+
+
+export const getGetAuditDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getAuditDashboard>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditDashboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditDashboard>>> = ({ signal }) => getAuditDashboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditDashboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditDashboard>>>
+export type GetAuditDashboardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get audit dashboard summary stats
+ */
+
+export function useGetAuditDashboard<TData = Awaited<ReturnType<typeof getAuditDashboard>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditDashboardQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -11,3 +11,7 @@ export * from "./dependents";
 export * from "./enrollment_periods";
 export * from "./enrollment_changes";
 export * from "./notifications";
+export * from "./audit_sessions";
+export * from "./audit_ert_responses";
+export * from "./audit_statistical_results";
+export * from "./audit_csv_uploads";

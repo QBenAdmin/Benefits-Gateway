@@ -1514,3 +1514,306 @@ export const GetChatbotTopicsResponseItem = zod.object({
 export const GetChatbotTopicsResponse = zod.array(GetChatbotTopicsResponseItem)
 
 
+/**
+ * @summary List audit sessions
+ */
+export const ListAuditSessionsQueryParams = zod.object({
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListAuditSessionsResponse = zod.object({
+  "sessions": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "vendorSystem": zod.string().nullish(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().nullish(),
+  "windowEnd": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number(),
+  "totalPages": zod.number()
+})
+
+
+/**
+ * @summary Create a new audit session
+ */
+export const CreateAuditSessionBody = zod.object({
+  "name": zod.string(),
+  "vendorSystem": zod.string().optional(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().optional(),
+  "windowEnd": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+
+/**
+ * @summary Get audit session by ID
+ */
+export const GetAuditSessionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAuditSessionResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "vendorSystem": zod.string().nullish(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().nullish(),
+  "windowEnd": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update an audit session
+ */
+export const UpdateAuditSessionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAuditSessionBody = zod.object({
+  "name": zod.string().optional(),
+  "vendorSystem": zod.string().optional(),
+  "cadence": zod.string().optional(),
+  "windowStart": zod.string().optional(),
+  "windowEnd": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+export const UpdateAuditSessionResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "vendorSystem": zod.string().nullish(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().nullish(),
+  "windowEnd": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete audit session
+ */
+export const DeleteAuditSessionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get ERT checklist responses and pillar scores for a session
+ */
+export const GetAuditErtParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAuditErtResponse = zod.object({
+  "responses": zod.array(zod.object({
+  "questionId": zod.string(),
+  "answered": zod.boolean(),
+  "notes": zod.string().nullish()
+})),
+  "pillarScores": zod.array(zod.object({
+  "pillar": zod.string(),
+  "score": zod.number(),
+  "answeredCount": zod.number(),
+  "totalCount": zod.number()
+})),
+  "overallScore": zod.number()
+})
+
+
+/**
+ * @summary Submit or update ERT checklist responses for a session
+ */
+export const SubmitAuditErtParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SubmitAuditErtBody = zod.object({
+  "responses": zod.array(zod.object({
+  "questionId": zod.string(),
+  "answered": zod.boolean(),
+  "notes": zod.string().nullish()
+}))
+})
+
+export const SubmitAuditErtResponse = zod.object({
+  "responses": zod.array(zod.object({
+  "questionId": zod.string(),
+  "answered": zod.boolean(),
+  "notes": zod.string().nullish()
+})),
+  "pillarScores": zod.array(zod.object({
+  "pillar": zod.string(),
+  "score": zod.number(),
+  "answeredCount": zod.number(),
+  "totalCount": zod.number()
+})),
+  "overallScore": zod.number()
+})
+
+
+/**
+ * @summary Upload workforce CSV and run statistical analysis
+ */
+export const UploadAuditCsvParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UploadAuditCsvBody = zod.object({
+  "filename": zod.string(),
+  "csvData": zod.string(),
+  "columnMap": zod.object({
+  "employeeId": zod.string().optional(),
+  "gender": zod.string().optional(),
+  "race": zod.string().optional(),
+  "age": zod.string().optional(),
+  "department": zod.string().optional(),
+  "jobTitle": zod.string().optional(),
+  "hireDate": zod.string().optional(),
+  "terminationDate": zod.string().optional(),
+  "promotionDate": zod.string().optional(),
+  "baseSalary": zod.string().optional(),
+  "finalDecision": zod.string().optional()
+})
+})
+
+export const UploadAuditCsvResponse = zod.object({
+  "sessionId": zod.number(),
+  "statisticalResults": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "metricType": zod.string(),
+  "groupA": zod.string(),
+  "groupB": zod.string(),
+  "groupARate": zod.number().nullish(),
+  "groupBRate": zod.number().nullish(),
+  "value": zod.number().nullish(),
+  "threshold": zod.number().nullish(),
+  "passed": zod.boolean().nullish(),
+  "riskLevel": zod.string().nullish(),
+  "pValue": zod.number().nullish().describe('Two-tailed p-value from the significance test (chi-square or Welch t-test)'),
+  "significant": zod.boolean().nullish().describe('True if p < 0.05 (statistically significant at 95% confidence)'),
+  "testType": zod.string().nullish().describe('Statistical test used: chi-square-2x2 or welch-t-test')
+})),
+  "findings": zod.array(zod.object({
+  "severity": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "legalBasis": zod.string(),
+  "metricType": zod.string().nullish(),
+  "groupA": zod.string().nullish(),
+  "groupB": zod.string().nullish(),
+  "value": zod.number().nullish()
+})),
+  "overallRiskLevel": zod.string(),
+  "csvUpload": zod.object({
+  "id": zod.number(),
+  "filename": zod.string(),
+  "rowCount": zod.number().nullish(),
+  "createdAt": zod.string()
+}).optional()
+})
+
+
+/**
+ * @summary Get stored statistical analysis results for a session
+ */
+export const GetAuditResultsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAuditResultsResponse = zod.object({
+  "sessionId": zod.number(),
+  "statisticalResults": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "metricType": zod.string(),
+  "groupA": zod.string(),
+  "groupB": zod.string(),
+  "groupARate": zod.number().nullish(),
+  "groupBRate": zod.number().nullish(),
+  "value": zod.number().nullish(),
+  "threshold": zod.number().nullish(),
+  "passed": zod.boolean().nullish(),
+  "riskLevel": zod.string().nullish(),
+  "pValue": zod.number().nullish().describe('Two-tailed p-value from the significance test (chi-square or Welch t-test)'),
+  "significant": zod.boolean().nullish().describe('True if p < 0.05 (statistically significant at 95% confidence)'),
+  "testType": zod.string().nullish().describe('Statistical test used: chi-square-2x2 or welch-t-test')
+})),
+  "findings": zod.array(zod.object({
+  "severity": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "legalBasis": zod.string(),
+  "metricType": zod.string().nullish(),
+  "groupA": zod.string().nullish(),
+  "groupB": zod.string().nullish(),
+  "value": zod.number().nullish()
+})),
+  "overallRiskLevel": zod.string(),
+  "csvUpload": zod.object({
+  "id": zod.number(),
+  "filename": zod.string(),
+  "rowCount": zod.number().nullish(),
+  "createdAt": zod.string()
+}).optional()
+})
+
+
+/**
+ * @summary Fetch latest EEOC and CA CRD regulatory news items
+ */
+export const GetAuditRegulatoryFeedResponse = zod.object({
+  "eeoc": zod.array(zod.object({
+  "title": zod.string(),
+  "link": zod.string(),
+  "pubDate": zod.string(),
+  "source": zod.string(),
+  "excerpt": zod.string().nullish()
+})),
+  "caCrd": zod.array(zod.object({
+  "title": zod.string(),
+  "link": zod.string(),
+  "pubDate": zod.string(),
+  "source": zod.string(),
+  "excerpt": zod.string().nullish()
+})),
+  "lastRefreshed": zod.string()
+})
+
+
+/**
+ * @summary Get audit dashboard summary stats
+ */
+export const GetAuditDashboardResponse = zod.object({
+  "totalAudits": zod.number(),
+  "passingAudits": zod.number(),
+  "openAudits": zod.number(),
+  "lastAuditDate": zod.string().nullish(),
+  "recentSessions": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "vendorSystem": zod.string().nullish(),
+  "cadence": zod.string(),
+  "windowStart": zod.string().nullish(),
+  "windowEnd": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+

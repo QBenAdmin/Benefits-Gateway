@@ -15,6 +15,7 @@ import enrollmentChangesRouter from "./enrollment_changes";
 import notificationsRouter from "./notifications";
 import chatbotRouter from "./chatbot";
 import seedRouter from "./seed";
+import auditRouter from "./audit";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(enrollmentChangesRouter);
 router.use(notificationsRouter);
 router.use(chatbotRouter);
 router.use(seedRouter);
+router.use(auditRouter);
 
 export default router;

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/compliance-audit/"
+title = "ERT Compliance Auditor"
+version = "1.0.0"
+id = "artifacts/hr-compliance-auditor"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/compliance-audit/" ]
+localPort = 25313
+
+[services.development]
+run = "pnpm --filter @workspace/hr-compliance-auditor run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hr-compliance-auditor", "run", "build" ]
+publicDir = "artifacts/hr-compliance-auditor/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25313"
+BASE_PATH = "/compliance-audit/"

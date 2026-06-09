@@ -725,6 +725,173 @@ export interface ChatbotTopic {
   keywords: string[];
 }
 
+export interface AuditSession {
+  id: number;
+  name: string;
+  /** @nullable */
+  vendorSystem?: string | null;
+  cadence: string;
+  /** @nullable */
+  windowStart?: string | null;
+  /** @nullable */
+  windowEnd?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditSessionInput {
+  name: string;
+  vendorSystem?: string;
+  cadence: string;
+  windowStart?: string;
+  windowEnd?: string;
+  status?: string;
+}
+
+export interface AuditSessionUpdate {
+  name?: string;
+  vendorSystem?: string;
+  cadence?: string;
+  windowStart?: string;
+  windowEnd?: string;
+  status?: string;
+}
+
+export interface AuditErtResponse {
+  questionId: string;
+  answered: boolean;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface AuditErtPillarScore {
+  pillar: string;
+  score: number;
+  answeredCount: number;
+  totalCount: number;
+}
+
+export interface AuditErtResult {
+  responses: AuditErtResponse[];
+  pillarScores: AuditErtPillarScore[];
+  overallScore: number;
+}
+
+export interface AuditErtInput {
+  responses: AuditErtResponse[];
+}
+
+export interface AuditStatisticalResult {
+  id: number;
+  sessionId: number;
+  metricType: string;
+  groupA: string;
+  groupB: string;
+  /** @nullable */
+  groupARate?: number | null;
+  /** @nullable */
+  groupBRate?: number | null;
+  /** @nullable */
+  value?: number | null;
+  /** @nullable */
+  threshold?: number | null;
+  /** @nullable */
+  passed?: boolean | null;
+  /** @nullable */
+  riskLevel?: string | null;
+  /**
+     * Two-tailed p-value from the significance test (chi-square or Welch t-test)
+     * @nullable
+     */
+  pValue?: number | null;
+  /**
+     * True if p < 0.05 (statistically significant at 95% confidence)
+     * @nullable
+     */
+  significant?: boolean | null;
+  /**
+     * Statistical test used: chi-square-2x2 or welch-t-test
+     * @nullable
+     */
+  testType?: string | null;
+}
+
+export type AuditCsvUploadInputColumnMap = {
+  employeeId?: string;
+  gender?: string;
+  race?: string;
+  age?: string;
+  department?: string;
+  jobTitle?: string;
+  hireDate?: string;
+  terminationDate?: string;
+  promotionDate?: string;
+  baseSalary?: string;
+  finalDecision?: string;
+};
+
+export interface AuditCsvUploadInput {
+  filename: string;
+  csvData: string;
+  columnMap: AuditCsvUploadInputColumnMap;
+}
+
+export interface AuditFinding {
+  severity: string;
+  category: string;
+  description: string;
+  legalBasis: string;
+  /** @nullable */
+  metricType?: string | null;
+  /** @nullable */
+  groupA?: string | null;
+  /** @nullable */
+  groupB?: string | null;
+  /** @nullable */
+  value?: number | null;
+}
+
+export interface AuditCsvUploadMeta {
+  id: number;
+  filename: string;
+  /** @nullable */
+  rowCount?: number | null;
+  createdAt: string;
+}
+
+export interface AuditAnalysisResult {
+  sessionId: number;
+  statisticalResults: AuditStatisticalResult[];
+  findings: AuditFinding[];
+  overallRiskLevel: string;
+  csvUpload?: AuditCsvUploadMeta;
+}
+
+export interface RegulatoryFeedItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  source: string;
+  /** @nullable */
+  excerpt?: string | null;
+}
+
+export interface RegulatoryFeedResult {
+  eeoc: RegulatoryFeedItem[];
+  caCrd: RegulatoryFeedItem[];
+  lastRefreshed: string;
+}
+
+export interface AuditDashboardStats {
+  totalAudits: number;
+  passingAudits: number;
+  openAudits: number;
+  /** @nullable */
+  lastAuditDate?: string | null;
+  recentSessions: AuditSession[];
+}
+
 export type ListEmployeesParams = {
 employerId?: number;
 status?: string;
@@ -754,5 +921,18 @@ status?: string;
 export type ListNotificationsParams = {
 status?: string;
 type?: string;
+};
+
+export type ListAuditSessionsParams = {
+page?: number;
+limit?: number;
+};
+
+export type ListAuditSessions200 = {
+  sessions: AuditSession[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 };
 

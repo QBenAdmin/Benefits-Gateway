@@ -39,6 +39,8 @@ tags:
     description: System notifications and alerts
   - name: chatbot
     description: Benefits Q&A chatbot
+  - name: complianceAuditor
+    description: HR Title VII AI Compliance Auditor (ERT Framework)
 
 paths:
   /healthz:
@@ -1364,6 +1366,234 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ChatbotTopic"
+
+  # Compliance Auditor
+  /audit/sessions:
+    get:
+      operationId: listAuditSessions
+      tags: [complianceAuditor]
+      summary: List audit sessions
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of audit sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditSession"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  totalPages:
+                    type: integer
+                required:
+                  - sessions
+                  - total
+                  - page
+                  - limit
+                  - totalPages
+    post:
+      operationId: createAuditSession
+      tags: [complianceAuditor]
+      summary: Create a new audit session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditSessionInput"
+      responses:
+        "201":
+          description: Created audit session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditSession"
+
+  /audit/sessions/{id}:
+    get:
+      operationId: getAuditSession
+      tags: [complianceAuditor]
+      summary: Get audit session by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit session detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditSession"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAuditSession
+      tags: [complianceAuditor]
+      summary: Update an audit session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditSessionUpdate"
+      responses:
+        "200":
+          description: Updated audit session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditSession"
+    delete:
+      operationId: deleteAuditSession
+      tags: [complianceAuditor]
+      summary: Delete audit session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /audit/sessions/{id}/ert:
+    get:
+      operationId: getAuditErt
+      tags: [complianceAuditor]
+      summary: Get ERT checklist responses and pillar scores for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: ERT responses and scores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditErtResult"
+    post:
+      operationId: submitAuditErt
+      tags: [complianceAuditor]
+      summary: Submit or update ERT checklist responses for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditErtInput"
+      responses:
+        "200":
+          description: Updated ERT result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditErtResult"
+
+  /audit/sessions/{id}/csv:
+    post:
+      operationId: uploadAuditCsv
+      tags: [complianceAuditor]
+      summary: Upload workforce CSV and run statistical analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditCsvUploadInput"
+      responses:
+        "200":
+          description: Statistical analysis results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditAnalysisResult"
+
+  /audit/sessions/{id}/results:
+    get:
+      operationId: getAuditResults
+      tags: [complianceAuditor]
+      summary: Get stored statistical analysis results for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analysis results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditAnalysisResult"
+
+  /audit/regulatory-feed:
+    get:
+      operationId: getAuditRegulatoryFeed
+      tags: [complianceAuditor]
+      summary: Fetch latest EEOC and CA CRD regulatory news items
+      responses:
+        "200":
+          description: Regulatory feed items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegulatoryFeedResult"
+
+  /audit/dashboard:
+    get:
+      operationId: getAuditDashboard
+      tags: [complianceAuditor]
+      summary: Get audit dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditDashboardStats"
 
 
 components:
@@ -2723,3 +2953,325 @@ components:
         - title
         - description
         - keywords
+
+    AuditSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        vendorSystem:
+          type: ["string", "null"]
+        cadence:
+          type: string
+        windowStart:
+          type: ["string", "null"]
+        windowEnd:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - cadence
+        - status
+        - createdAt
+        - updatedAt
+
+    AuditSessionInput:
+      type: object
+      properties:
+        name:
+          type: string
+        vendorSystem:
+          type: string
+        cadence:
+          type: string
+        windowStart:
+          type: string
+        windowEnd:
+          type: string
+        status:
+          type: string
+      required:
+        - name
+        - cadence
+
+    AuditSessionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        vendorSystem:
+          type: string
+        cadence:
+          type: string
+        windowStart:
+          type: string
+        windowEnd:
+          type: string
+        status:
+          type: string
+
+    AuditErtResponse:
+      type: object
+      properties:
+        questionId:
+          type: string
+        answered:
+          type: boolean
+        notes:
+          type: ["string", "null"]
+      required:
+        - questionId
+        - answered
+
+    AuditErtPillarScore:
+      type: object
+      properties:
+        pillar:
+          type: string
+        score:
+          type: number
+        answeredCount:
+          type: integer
+        totalCount:
+          type: integer
+      required:
+        - pillar
+        - score
+        - answeredCount
+        - totalCount
+
+    AuditErtResult:
+      type: object
+      properties:
+        responses:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditErtResponse"
+        pillarScores:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditErtPillarScore"
+        overallScore:
+          type: number
+      required:
+        - responses
+        - pillarScores
+        - overallScore
+
+    AuditErtInput:
+      type: object
+      properties:
+        responses:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditErtResponse"
+      required:
+        - responses
+
+    AuditStatisticalResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        metricType:
+          type: string
+        groupA:
+          type: string
+        groupB:
+          type: string
+        groupARate:
+          type: ["number", "null"]
+        groupBRate:
+          type: ["number", "null"]
+        value:
+          type: ["number", "null"]
+        threshold:
+          type: ["number", "null"]
+        passed:
+          type: ["boolean", "null"]
+        riskLevel:
+          type: ["string", "null"]
+        pValue:
+          type: ["number", "null"]
+          description: "Two-tailed p-value from the significance test (chi-square or Welch t-test)"
+        significant:
+          type: ["boolean", "null"]
+          description: "True if p < 0.05 (statistically significant at 95% confidence)"
+        testType:
+          type: ["string", "null"]
+          description: "Statistical test used: chi-square-2x2 or welch-t-test"
+      required:
+        - id
+        - sessionId
+        - metricType
+        - groupA
+        - groupB
+
+    AuditCsvUploadInput:
+      type: object
+      properties:
+        filename:
+          type: string
+        csvData:
+          type: string
+        columnMap:
+          type: object
+          properties:
+            employeeId:
+              type: string
+            gender:
+              type: string
+            race:
+              type: string
+            age:
+              type: string
+            department:
+              type: string
+            jobTitle:
+              type: string
+            hireDate:
+              type: string
+            terminationDate:
+              type: string
+            promotionDate:
+              type: string
+            baseSalary:
+              type: string
+            finalDecision:
+              type: string
+      required:
+        - filename
+        - csvData
+        - columnMap
+
+    AuditFinding:
+      type: object
+      properties:
+        severity:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        legalBasis:
+          type: string
+        metricType:
+          type: ["string", "null"]
+        groupA:
+          type: ["string", "null"]
+        groupB:
+          type: ["string", "null"]
+        value:
+          type: ["number", "null"]
+      required:
+        - severity
+        - category
+        - description
+        - legalBasis
+
+    AuditAnalysisResult:
+      type: object
+      properties:
+        sessionId:
+          type: integer
+        statisticalResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditStatisticalResult"
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditFinding"
+        overallRiskLevel:
+          type: string
+        csvUpload:
+          $ref: "#/components/schemas/AuditCsvUploadMeta"
+      required:
+        - sessionId
+        - statisticalResults
+        - findings
+        - overallRiskLevel
+
+    AuditCsvUploadMeta:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        rowCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - filename
+        - createdAt
+
+    RegulatoryFeedItem:
+      type: object
+      properties:
+        title:
+          type: string
+        link:
+          type: string
+        pubDate:
+          type: string
+        source:
+          type: string
+        excerpt:
+          type: ["string", "null"]
+      required:
+        - title
+        - link
+        - pubDate
+        - source
+
+    RegulatoryFeedResult:
+      type: object
+      properties:
+        eeoc:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegulatoryFeedItem"
+        caCrd:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegulatoryFeedItem"
+        lastRefreshed:
+          type: string
+      required:
+        - eeoc
+        - caCrd
+        - lastRefreshed
+
+    AuditDashboardStats:
+      type: object
+      properties:
+        totalAudits:
+          type: integer
+        passingAudits:
+          type: integer
+        openAudits:
+          type: integer
+        lastAuditDate:
+          type: ["string", "null"]
+        recentSessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditSession"
+      required:
+        - totalAudits
+        - passingAudits
+        - openAudits
+        - recentSessions
