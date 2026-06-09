@@ -1,6 +1,9 @@
 import { Router } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import { parse } from "csv-parse/sync";
 import { XMLParser } from "fast-xml-parser";
+import PDFDocument from "pdfkit";
 import { db } from "@workspace/db";
 import {
   auditSessionsTable,
@@ -861,6 +864,301 @@ router.get("/audit/regulatory-feed", async (_req, res) => {
 
   feedCache = { data, expiresAt: Date.now() + 30 * 60 * 1000 };
   res.json(data);
+});
+
+// GET /audit/sessions/:id/report.pdf
+router.get("/audit/sessions/:id/report.pdf", async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  const sessions = await db.select().from(auditSessionsTable).where(eq(auditSessionsTable.id, id));
+  const session = sessions[0];
+  if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+
+  const [statResults, ertResponses] = await Promise.all([
+    db.select().from(auditStatisticalResultsTable).where(eq(auditStatisticalResultsTable.sessionId, id)),
+    db.select().from(auditErtResponsesTable).where(eq(auditErtResponsesTable.sessionId, id)),
+  ]);
+
+  const findings = generateFindings(statResults.map((r) => ({
+    metricType: r.metricType,
+    groupA: r.groupA,
+    groupB: r.groupB,
+    groupARate: r.groupARate,
+    groupBRate: r.groupBRate,
+    value: r.value,
+    threshold: r.threshold,
+    passed: r.passed,
+    riskLevel: r.riskLevel,
+    pValue: r.pValue ?? null,
+    significant: r.significant ?? null,
+    testType: r.testType ?? null,
+  })));
+
+  const failCount = statResults.filter((r) => r.passed === false).length;
+  const overallRiskLevel = failCount === 0 ? "Low" : failCount <= 2 ? "Moderate" : "High";
+
+  const pillars = [
+    { prefix: "e", name: "Equity", count: 6 },
+    { prefix: "r", name: "Reliability", count: 6 },
+    { prefix: "t", name: "Transparency", count: 6 },
+  ];
+  const pillarScores = pillars.map(({ prefix, name, count }) => {
+    const pillarResponses = ertResponses.filter((r) => r.questionId.startsWith(prefix));
+    const answeredCount = pillarResponses.filter((r) => r.answered).length;
+    return { pillar: name, score: count > 0 ? (answeredCount / count) * 100 : 0, answeredCount, totalCount: count };
+  });
+  const overallErtScore = pillarScores.reduce((sum, p) => sum + p.score, 0) / pillarScores.length;
+
+  const ertFindings = pillarScores.filter((p) => p.score < 60).map((p) => ({
+    severity: p.score < 30 ? "High" : "Moderate",
+    category: `ERT ${p.pillar}`,
+    description: `ERT ${p.pillar} pillar score is ${p.score.toFixed(0)}% (${p.answeredCount} of ${p.totalCount} controls confirmed).`,
+    legalBasis: "AIAJ Academy ERT Framework; Title VII §703",
+  }));
+  const allFindings = [...findings, ...ertFindings];
+
+  // ─── PDF generation ───────────────────────────────────────────────────────
+  const BRAND_RED = "#9E1E34";
+  const BRAND_BURGUNDY = "#5E0E20";
+  const BRAND_TEAL = "#4A8FA3";
+  const BRAND_SLATE = "#4A5568";
+  const PAGE_MARGIN = 48;
+  const PAGE_WIDTH = 595.28; // A4
+  const CONTENT_WIDTH = PAGE_WIDTH - PAGE_MARGIN * 2;
+
+  // Resolve font paths relative to the dist directory at runtime
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const FONTS_DIR = path.join(__dirname, "fonts");
+  const FONT_OUTFIT_REGULAR = path.join(FONTS_DIR, "Outfit-Regular.ttf");
+  const FONT_OUTFIT_BOLD = path.join(FONTS_DIR, "Outfit-Bold.ttf");
+  const FONT_INTER_REGULAR = path.join(FONTS_DIR, "Inter-Regular.ttf");
+  const FONT_INTER_SEMIBOLD = path.join(FONTS_DIR, "Inter-SemiBold.ttf");
+
+  // Enable bufferPages so we can switchToPage for footer rendering
+  const doc = new PDFDocument({
+    size: "A4",
+    margin: PAGE_MARGIN,
+    bufferPages: true,
+    info: { Title: `Compliance Audit Report — ${session.name}`, Author: "ERT Compliance Auditor" },
+  });
+
+  // Register brand fonts
+  doc.registerFont("Outfit", FONT_OUTFIT_REGULAR);
+  doc.registerFont("Outfit-Bold", FONT_OUTFIT_BOLD);
+  doc.registerFont("Inter", FONT_INTER_REGULAR);
+  doc.registerFont("Inter-SemiBold", FONT_INTER_SEMIBOLD);
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="audit-report-${id}.pdf"`);
+  doc.pipe(res);
+
+  const formatDate = (d: Date | string | null | undefined) => {
+    if (!d) return "—";
+    const dt = typeof d === "string" ? new Date(d) : d;
+    return dt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  };
+
+  // Helper to draw a filled rectangle
+  const fillRect = (x: number, y: number, w: number, h: number, color: string) => {
+    doc.save().rect(x, y, w, h).fill(color).restore();
+  };
+
+  // ── Header bar ──────────────────────────────────────────────────────────
+  fillRect(0, 0, PAGE_WIDTH, 72, BRAND_BURGUNDY);
+  doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(18).text("Compliance Audit Report", PAGE_MARGIN, 18);
+  doc.fillColor("#FAE0DC").font("Inter").fontSize(9).text("Title VII Disparate Impact & ERT Framework Assessment", PAGE_MARGIN, 42);
+  const generatedText = `Generated ${formatDate(new Date())}`;
+  doc.fillColor("#FAE0DC").font("Inter").fontSize(8).text(generatedText, PAGE_MARGIN, 57, { width: CONTENT_WIDTH, align: "right" });
+
+  doc.moveDown(0.5);
+  let y = 88;
+
+  // ── Session metadata ────────────────────────────────────────────────────
+  fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_RED);
+  doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text("AUDIT SESSION", PAGE_MARGIN + 6, y + 3);
+  y += 22;
+
+  const metaRows = [
+    ["Name", session.name],
+    ["Vendor / System", session.vendorSystem ?? "Not specified"],
+    ["Cadence", session.cadence ?? "—"],
+    ["Status", session.status],
+    ["Window", session.windowStart && session.windowEnd ? `${session.windowStart} – ${session.windowEnd}` : "—"],
+    ["Created", formatDate(session.createdAt)],
+  ];
+  for (const [label, value] of metaRows) {
+    doc.fillColor(BRAND_SLATE).font("Inter-SemiBold").fontSize(8.5).text(`${label}:`, PAGE_MARGIN, y, { continued: true, width: 110 });
+    doc.fillColor("#374151").font("Inter").fontSize(8.5).text(` ${value}`, { width: CONTENT_WIDTH - 110 });
+    y += 14;
+  }
+  y += 6;
+
+  // ── Overall risk ─────────────────────────────────────────────────────────
+  const riskColors: Record<string, string> = { Low: "#065F46", Moderate: "#92400E", High: "#991B1B" };
+  const riskBg: Record<string, string> = { Low: "#D1FAE5", Moderate: "#FEF3C7", High: "#FEE2E2" };
+  fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_RED);
+  doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text("OVERALL DISPARATE IMPACT RISK", PAGE_MARGIN + 6, y + 3);
+  y += 22;
+  const riskLabel = overallRiskLevel;
+  fillRect(PAGE_MARGIN, y, 100, 18, riskBg[riskLabel] ?? "#F3F4F6");
+  doc.fillColor(riskColors[riskLabel] ?? BRAND_SLATE).font("Inter-SemiBold").fontSize(10).text(`${riskLabel} Risk`, PAGE_MARGIN + 6, y + 4, { width: 88 });
+  y += 28;
+
+  // ── ERT Scores ───────────────────────────────────────────────────────────
+  if (ertResponses.length > 0) {
+    fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_RED);
+    doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text("ERT ASSESSMENT SCORES", PAGE_MARGIN + 6, y + 3);
+    y += 22;
+
+    const boxW = (CONTENT_WIDTH - 9) / 4;
+    const ertBoxes = [
+      { label: "Overall ERT", score: overallErtScore },
+      ...pillarScores.map((p) => ({ label: p.pillar, score: p.score, sub: `${p.answeredCount}/${p.totalCount}` })),
+    ];
+    for (let i = 0; i < ertBoxes.length; i++) {
+      const bx = PAGE_MARGIN + i * (boxW + 3);
+      const box = ertBoxes[i];
+      const scoreColor = box.score >= 60 ? "#065F46" : box.score >= 30 ? "#92400E" : "#991B1B";
+      fillRect(bx, y, boxW, 52, "#F8F6F4");
+      doc.rect(bx, y, boxW, 52).lineWidth(0.5).strokeColor("#D1CFC7").stroke();
+      doc.fillColor(BRAND_SLATE).font("Inter").fontSize(7.5).text(box.label, bx + 4, y + 6, { width: boxW - 8, align: "center" });
+      doc.fillColor(scoreColor).font("Outfit-Bold").fontSize(20).text(`${box.score.toFixed(0)}%`, bx + 4, y + 18, { width: boxW - 8, align: "center" });
+      if ("sub" in box && box.sub) {
+        doc.fillColor("#9CA3AF").font("Inter").fontSize(7).text(box.sub, bx + 4, y + 40, { width: boxW - 8, align: "center" });
+      }
+    }
+    y += 62;
+  }
+
+  // ── Statistical analysis table ────────────────────────────────────────────
+  if (statResults.length > 0) {
+    if (y > 680) { doc.addPage(); y = PAGE_MARGIN; }
+    fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_RED);
+    doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text("STATISTICAL ANALYSIS", PAGE_MARGIN + 6, y + 3);
+    y += 22;
+
+    const colWidths = [130, 70, 70, 60, 52, 52];
+    const headers = ["Metric", "Group A", "Group B", "Value", "Pass/Fail", "Risk"];
+    fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 15, "#E5E7EB");
+    let cx = PAGE_MARGIN;
+    for (let i = 0; i < headers.length; i++) {
+      doc.fillColor("#1F2937").font("Inter-SemiBold").fontSize(7.5).text(headers[i], cx + 3, y + 4, { width: colWidths[i] - 6 });
+      cx += colWidths[i];
+    }
+    y += 15;
+
+    for (const r of statResults) {
+      if (y > 740) { doc.addPage(); y = PAGE_MARGIN; }
+      const rowBg = r.passed === false ? "#FEF2F2" : "#FFFFFF";
+      fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 13, rowBg);
+      doc.rect(PAGE_MARGIN, y, CONTENT_WIDTH, 13).lineWidth(0.3).strokeColor("#E5E7EB").stroke();
+      cx = PAGE_MARGIN;
+      const cells = [
+        r.metricType?.replace(/_/g, " ") ?? "—",
+        r.groupA ?? "—",
+        r.groupB ?? "—",
+        r.value != null ? r.value.toFixed(3) : "—",
+        r.passed == null ? "—" : r.passed ? "PASS" : "FAIL",
+        r.riskLevel ?? "—",
+      ];
+      const cellColors = [BRAND_SLATE, BRAND_SLATE, BRAND_SLATE, BRAND_SLATE,
+        r.passed === true ? "#065F46" : r.passed === false ? "#991B1B" : BRAND_SLATE,
+        r.riskLevel === "High" ? "#991B1B" : r.riskLevel === "Moderate" ? "#92400E" : "#065F46",
+      ];
+      for (let i = 0; i < cells.length; i++) {
+        doc.fillColor(cellColors[i]).font("Inter").fontSize(7).text(cells[i], cx + 3, y + 3, { width: colWidths[i] - 6, lineBreak: false });
+        cx += colWidths[i];
+      }
+      y += 13;
+    }
+    y += 8;
+  }
+
+  // ── Findings ─────────────────────────────────────────────────────────────
+  if (allFindings.length > 0) {
+    if (y > 640) { doc.addPage(); y = PAGE_MARGIN; }
+    fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_RED);
+    doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text(`FINDINGS (${allFindings.length})`, PAGE_MARGIN + 6, y + 3);
+    y += 22;
+
+    for (const f of allFindings) {
+      const findingBg = f.severity === "High" ? "#FEF2F2" : f.severity === "Moderate" ? "#FFFBEB" : "#EFF6FF";
+      const findingBorder = f.severity === "High" ? "#FCA5A5" : f.severity === "Moderate" ? "#FCD34D" : "#BFDBFE";
+      const findingText = f.severity === "High" ? "#991B1B" : f.severity === "Moderate" ? "#92400E" : "#1D4ED8";
+
+      // Estimate block height using current font size context
+      doc.font("Inter").fontSize(7.5);
+      const descHeight = doc.heightOfString(f.description, { width: CONTENT_WIDTH - 18 });
+      doc.font("Inter").fontSize(7);
+      const basisHeight = doc.heightOfString(`Legal basis: ${f.legalBasis}`, { width: CONTENT_WIDTH - 18 });
+      const blockH = 16 + descHeight + basisHeight + 10;
+
+      if (y + blockH > 760) { doc.addPage(); y = PAGE_MARGIN; }
+
+      fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, blockH, findingBg);
+      doc.rect(PAGE_MARGIN, y, CONTENT_WIDTH, blockH).lineWidth(0.5).strokeColor(findingBorder).stroke();
+      doc.fillColor(findingText).font("Inter-SemiBold").fontSize(8).text(`[${f.severity}] ${f.category}`, PAGE_MARGIN + 7, y + 5, { width: CONTENT_WIDTH - 14 });
+      const descY = y + 17;
+      doc.fillColor("#374151").font("Inter").fontSize(7.5).text(f.description, PAGE_MARGIN + 7, descY, { width: CONTENT_WIDTH - 14 });
+      const basisY = descY + descHeight + 2;
+      doc.fillColor("#6B7280").font("Inter").fontSize(7).text(`Legal basis: ${f.legalBasis}`, PAGE_MARGIN + 7, basisY, { width: CONTENT_WIDTH - 14 });
+      y += blockH + 5;
+    }
+    y += 4;
+  }
+
+  // ── Methodology ───────────────────────────────────────────────────────────
+  if (y > 640) { doc.addPage(); y = PAGE_MARGIN; }
+  fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_TEAL);
+  doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text("METHODOLOGY NOTES", PAGE_MARGIN + 6, y + 3);
+  y += 22;
+
+  const methodItems = [
+    "Adverse impact computed using the EEOC 4/5ths rule per 29 CFR §1607.4(D)",
+    "Compensation gaps flagged at >5% mean salary difference between groups",
+    "ERT scores computed as: (yes answers / total questions per pillar) x 100",
+    "Groups with fewer than 30 employees are flagged for small-sample caution",
+  ];
+  for (const item of methodItems) {
+    doc.fillColor(BRAND_SLATE).font("Inter").fontSize(7.5).text(`• ${item}`, PAGE_MARGIN + 6, y, { width: CONTENT_WIDTH - 12 });
+    y += 13;
+  }
+  y += 8;
+
+  // ── Legal references ──────────────────────────────────────────────────────
+  if (y > 640) { doc.addPage(); y = PAGE_MARGIN; }
+  fillRect(PAGE_MARGIN, y, CONTENT_WIDTH, 16, BRAND_TEAL);
+  doc.fillColor("#FFFFFF").font("Outfit-Bold").fontSize(10).text("SOURCES & LEGAL REFERENCES", PAGE_MARGIN + 6, y + 3);
+  y += 22;
+
+  const legalRefs = [
+    "Title VII of the Civil Rights Act of 1964 (42 U.S.C. §2000e)",
+    "EEOC Uniform Guidelines on Employee Selection Procedures, 29 CFR Part 1607",
+    "AIAJ Academy — ERT Framework for AI in HR (https://aiajacademy.io/hr)",
+    "California Civil Rights Department — Employment Discrimination (https://calcivilrights.ca.gov/employment/)",
+    "Griggs v. Duke Power Co., 401 U.S. 424 (1971)",
+    "Watson v. Fort Worth Bank & Trust, 487 U.S. 977 (1988)",
+    "Equal Pay Act of 1963 (29 U.S.C. §206(d))",
+  ];
+  for (const ref of legalRefs) {
+    doc.fillColor(BRAND_SLATE).font("Inter").fontSize(7.5).text(`• ${ref}`, PAGE_MARGIN + 6, y, { width: CONTENT_WIDTH - 12 });
+    y += 13;
+  }
+
+  // ── Footer on each page (requires bufferPages: true) ─────────────────────
+  // Flush buffered pages and iterate over them using the correct range
+  const { start, count } = doc.bufferedPageRange();
+  for (let i = 0; i < count; i++) {
+    doc.switchToPage(start + i);
+    const pageNum = i + 1;
+    fillRect(0, doc.page.height - 28, PAGE_WIDTH, 28, BRAND_BURGUNDY);
+    doc.fillColor("#FAE0DC").font("Inter").fontSize(7)
+      .text("ERT Compliance Auditor — Confidential", PAGE_MARGIN, doc.page.height - 18, { width: CONTENT_WIDTH / 2 });
+    doc.fillColor("#FAE0DC").font("Inter").fontSize(7)
+      .text(`Page ${pageNum} of ${count}`, PAGE_MARGIN, doc.page.height - 18, { width: CONTENT_WIDTH, align: "right" });
+  }
+
+  doc.end();
 });
 
 // GET /audit/dashboard

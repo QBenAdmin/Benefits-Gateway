@@ -38,6 +38,7 @@ import {
   ChevronRight,
   Upload,
   Printer,
+  Download,
   CheckCircle2,
   XCircle,
   AlertTriangle,
@@ -714,6 +715,7 @@ function ReportTab({ sessionId }: { sessionId: number }) {
   const { data: session } = useGetAuditSession(sessionId);
   const { data: results } = useGetAuditResults(sessionId);
   const { data: ertData } = useGetAuditErt(sessionId);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const findings = results?.findings ?? [];
   const ertFindings = (ertData?.pillarScores ?? []).filter((p) => p.score < 60).map((p) => ({
@@ -726,9 +728,32 @@ function ReportTab({ sessionId }: { sessionId: number }) {
 
   const handlePrint = () => window.print();
 
+  const handleDownloadPdf = async () => {
+    setIsDownloading(true);
+    try {
+      const res = await fetch(`/api/audit/sessions/${sessionId}/report.pdf`);
+      if (!res.ok) throw new Error("Failed to generate PDF");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-report-${sessionId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("PDF download failed. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end no-print">
+      <div className="flex justify-end gap-2 no-print">
+        <Button onClick={handleDownloadPdf} disabled={isDownloading} className="gap-2">
+          <Download className="h-4 w-4" />
+          {isDownloading ? "Generating PDF…" : "Download PDF"}
+        </Button>
         <Button onClick={handlePrint} variant="outline" className="gap-2">
           <Printer className="h-4 w-4" />
           Print / Save as PDF

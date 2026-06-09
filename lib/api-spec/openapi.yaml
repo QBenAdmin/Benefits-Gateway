@@ -1574,6 +1574,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuditAnalysisResult"
 
+  /audit/sessions/{id}/report.pdf:
+    get:
+      operationId: downloadAuditReportPdf
+      tags: [complianceAuditor]
+      summary: Download audit session report as a branded PDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PDF report file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Session not found
+
   /audit/regulatory-feed:
     get:
       operationId: getAuditRegulatoryFeed
